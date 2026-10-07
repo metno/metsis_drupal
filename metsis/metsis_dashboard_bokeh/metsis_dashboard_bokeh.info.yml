@@ -5,4 +5,3 @@ version: 2.0.2
 package: METSIS
 type: module
 configure: dashboard_bokeh.admin_settings_form
-dependencies: {  }
