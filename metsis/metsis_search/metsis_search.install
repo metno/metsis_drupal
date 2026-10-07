@@ -18,7 +18,9 @@ function metsis_search_install() {
  * All configuration shipped in config/install and config/optional (Search API
  * server, indexes, facets, views, blocks, date formats, sort fields, and the
  * autocomplete config) is removed automatically by Drupal's uninstall process
- * because the module owns those config objects.
+ * because the module owns those config objects. Facet block placements are
+ * deleted explicitly before their facets so placements on every theme are
+ * removed as well.
  *
  * This hook invalidates cached render output so stale search result pages and
  * blocks are not served after the module is removed.  Solr indexed documents
@@ -36,7 +38,6 @@ function metsis_search_uninstall(bool $is_syncing = FALSE): void {
   // Deletion order matters: remove dependents before their dependencies.
   $prefix_order = [
     'views.view.',
-    'facets.facet.',
     'facets.facet_source.',
     'search_api.index.',
     'search_api.server.',
@@ -46,6 +47,7 @@ function metsis_search_uninstall(bool $is_syncing = FALSE): void {
   foreach ($prefix_order as $prefix) {
     $config_to_delete[$prefix] = [];
   }
+  $facet_ids = [];
 
   foreach ($config_dirs as $dir) {
     if (!is_dir($dir)) {
@@ -60,12 +62,37 @@ function metsis_search_uninstall(bool $is_syncing = FALSE): void {
         continue;
       }
       $config_name = pathinfo($entry, PATHINFO_FILENAME);
+      if (str_starts_with($config_name, 'facets.facet.')) {
+        $facet_ids[] = substr($config_name, strlen('facets.facet.'));
+        continue;
+      }
       foreach ($prefix_order as $prefix) {
         if (str_starts_with($config_name, $prefix)) {
           $config_to_delete[$prefix][$config_name] = $config_name;
           break;
         }
       }
+    }
+  }
+
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $deleted_blocks = 0;
+  $deleted_facets = 0;
+  $block_storage = $entity_type_manager->getStorage('block');
+  $facet_storage = $entity_type_manager->getStorage('facets_facet');
+  foreach (array_unique($facet_ids) as $facet_id) {
+    $blocks = $block_storage->loadByProperties([
+      'plugin' => 'facet_block:' . $facet_id,
+    ]);
+    if ($blocks) {
+      $deleted_blocks += count($blocks);
+      $block_storage->delete($blocks);
+    }
+
+    $facet = $facet_storage->load($facet_id);
+    if ($facet) {
+      $facet->delete();
+      $deleted_facets++;
     }
   }
 
@@ -86,10 +113,14 @@ function metsis_search_uninstall(bool $is_syncing = FALSE): void {
   \Drupal::cache('render')->invalidateAll();
 
   \Drupal::logger('metsis_search')->notice(
-    'metsis_search uninstalled. Deleted @count module-owned facets, facet '
-    . 'sources, views, and Search API server/index configs. Solr index data '
-    . 'has been preserved (must be cleared manually if required).',
-    ['@count' => $deleted]
+    'metsis_search uninstalled. Deleted @count module-owned configuration '
+    . 'objects, including @facets facets, and @blocks facet block placements. '
+    . 'Solr index data has been preserved (must be cleared manually if required).',
+    [
+      '@count' => $deleted + $deleted_facets,
+      '@facets' => $deleted_facets,
+      '@blocks' => $deleted_blocks,
+    ]
   );
 }
 
