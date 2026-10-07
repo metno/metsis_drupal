@@ -21,6 +21,28 @@ The Metsis Search module for Drupal 8 are based on the contributed modules, sear
 Facets for search are provided by the facets module. Facets are tied to a specific search view. Configured
 facets are blocks that can be placed in regions on search page.
 
+## Uninstall
+
+Uninstalling Metsis Search deletes its shipped configuration entities through
+Drupal's entity storage API. This includes Search API sort fields, autocomplete
+searches, Views, facet sources, indexes, servers, blocks, and the Solr date format.
+Drupal removes module-prefixed settings automatically.
+
+All facets attached to the module's facet sources are removed, including facets
+created manually after installation. Facet block placements and exposed-form or
+View block placements are deleted across every theme, including disabled blocks
+and placements for removed displays. Sort fields attached to the module's Views
+and autocomplete searches attached to its indexes are also removed.
+
+Facets, blocks, sort fields, and autocomplete searches for unrelated sources,
+Views, and indexes are retained unless Drupal identifies a dependency requiring
+their removal or update. Indexes attached to the module's servers are removed as
+well. Solr documents are preserved by marking indexes read-only before deleting
+their entities; local tracker cleanup still runs.
+During configuration synchronization, the config importer controls entity changes
+instead of this hook. Export the cleanup configuration before synchronizing it
+to another site.
+
 
 ## TODO
 * Clean up code (remove unused code, not used configuration etc)

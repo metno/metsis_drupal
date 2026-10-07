@@ -5,6 +5,8 @@
  * Contains metsis_search install logic.
  */
 
+use Drupal\Core\Config\FileStorage;
+
 /**
  * Implements hook_install().
  */
@@ -15,96 +17,119 @@ function metsis_search_install() {
 /**
  * Implements hook_uninstall().
  *
- * All configuration shipped in config/install and config/optional (Search API
- * server, indexes, facets, views, blocks, date formats, sort fields, and the
- * autocomplete config) is removed automatically by Drupal's uninstall process
- * because the module owns those config objects. Facet block placements are
- * deleted explicitly before their facets so placements on every theme are
- * removed as well.
- *
- * This hook invalidates cached render output so stale search result pages and
- * blocks are not served after the module is removed.  Solr indexed documents
- * are intentionally left intact.
+ * Deletes shipped configuration entities through their storage handlers and
+ * removes all facets attached to the shipped sources, including user-created
+ * facets. Facet and View block placements are removed across all themes before
+ * their plugins disappear. Drupal handles module-prefixed simple configuration.
+ * Solr indexed documents are intentionally left intact.
  */
 function metsis_search_uninstall(bool $is_syncing = FALSE): void {
-  // Explicitly delete only the configuration objects shipped by this module
-  // that match the requested config domains.
-  $module_path = \Drupal::service('extension.list.module')->getPath('metsis_search');
-  $config_dirs = [
-    $module_path . '/config/install',
-    $module_path . '/config/optional',
-  ];
-
-  // Deletion order matters: remove dependents before their dependencies.
-  $prefix_order = [
-    'views.view.',
-    'facets.facet_source.',
-    'search_api.index.',
-    'search_api.server.',
-  ];
-
-  $config_to_delete = [];
-  foreach ($prefix_order as $prefix) {
-    $config_to_delete[$prefix] = [];
+  if ($is_syncing) {
+    // The config importer owns entity changes during synchronization.
+    \Drupal::cache('render')->invalidateAll();
+    return;
   }
-  $facet_ids = [];
 
-  foreach ($config_dirs as $dir) {
-    if (!is_dir($dir)) {
-      continue;
-    }
-    $entries = scandir($dir);
-    if ($entries === FALSE) {
-      continue;
-    }
-    foreach ($entries as $entry) {
-      if (!str_ends_with($entry, '.yml')) {
-        continue;
-      }
-      $config_name = pathinfo($entry, PATHINFO_FILENAME);
-      if (str_starts_with($config_name, 'facets.facet.')) {
-        $facet_ids[] = substr($config_name, strlen('facets.facet.'));
-        continue;
-      }
-      foreach ($prefix_order as $prefix) {
-        if (str_starts_with($config_name, $prefix)) {
-          $config_to_delete[$prefix][$config_name] = $config_name;
-          break;
+  $module_path = \Drupal::service('extension.list.module')->getPath('metsis_search');
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $config_manager = \Drupal::service('config.manager');
+  $entity_ids = [];
+  $source_names = [];
+  foreach (['install', 'optional'] as $directory) {
+    $defaults = new FileStorage($module_path . '/config/' . $directory);
+    foreach ($defaults->listAll() as $config_name) {
+      $entity_type_id = $config_manager->getEntityTypeIdByName($config_name);
+      if ($entity_type_id) {
+        $prefix = $entity_type_manager->getDefinition($entity_type_id)->getConfigPrefix() . '.';
+        $id = substr($config_name, strlen($prefix));
+        $entity_ids[$entity_type_id][$id] = $id;
+        if ($entity_type_id === 'facets_facet_source') {
+          // Also recognize sources already missing from active configuration.
+          $source_names[] = $defaults->read($config_name)['name'];
         }
       }
     }
   }
 
-  $entity_type_manager = \Drupal::entityTypeManager();
-  $deleted_blocks = 0;
-  $deleted_facets = 0;
-  $block_storage = $entity_type_manager->getStorage('block');
+  $source_storage = $entity_type_manager->getStorage('facets_facet_source');
+  /** @var \Drupal\facets\FacetSourceInterface $source */
+  foreach ($source_storage->loadMultiple(array_values($entity_ids['facets_facet_source'] ?? [])) as $source) {
+    $source_names[] = $source->getName();
+  }
   $facet_storage = $entity_type_manager->getStorage('facets_facet');
-  foreach (array_unique($facet_ids) as $facet_id) {
-    $blocks = $block_storage->loadByProperties([
-      'plugin' => 'facet_block:' . $facet_id,
-    ]);
-    if ($blocks) {
-      $deleted_blocks += count($blocks);
-      $block_storage->delete($blocks);
-    }
-
-    $facet = $facet_storage->load($facet_id);
-    if ($facet) {
-      $facet->delete();
-      $deleted_facets++;
+  if ($source_names) {
+    foreach ($facet_storage->loadByProperties(['facet_source_id' => array_unique($source_names)]) as $facet) {
+      $entity_ids['facets_facet'][$facet->id()] = $facet->id();
     }
   }
 
-  $config_factory = \Drupal::configFactory();
-  $deleted = 0;
-  foreach ($prefix_order as $prefix) {
-    foreach ($config_to_delete[$prefix] as $config_name) {
-      $config = $config_factory->getEditable($config_name);
-      if (!$config->isNew()) {
-        $config->delete();
-        $deleted++;
+  $facet_plugins = [];
+  foreach ($entity_ids['facets_facet'] ?? [] as $facet_id) {
+    $facet_plugins['facet_block:' . $facet_id] = TRUE;
+  }
+  $block_storage = $entity_type_manager->getStorage('block');
+  /** @var \Drupal\block\BlockInterface $block */
+  foreach ($block_storage->loadMultiple() as $block) {
+    $plugin_id = $block->getPluginId();
+    $remove = isset($facet_plugins[$plugin_id]);
+    foreach ($entity_ids['view'] ?? [] as $view_id) {
+      // Match removed displays too, not just displays still in the View entity.
+      $remove = $remove
+        || str_starts_with($plugin_id, 'views_exposed_filter_block:' . $view_id . '-')
+        || str_starts_with($plugin_id, 'views_block:' . $view_id . '-');
+    }
+    if ($remove) {
+      $entity_ids['block'][$block->id()] = $block->id();
+    }
+  }
+
+  if (!empty($entity_ids['search_api_server'])) {
+    $index_storage = $entity_type_manager->getStorage('search_api_index');
+    foreach ($index_storage->loadByProperties(['server' => array_values($entity_ids['search_api_server'])]) as $index) {
+      $entity_ids['search_api_index'][$index->id()] = $index->id();
+    }
+  }
+  if (!empty($entity_ids['search_api_index'])) {
+    $autocomplete_storage = $entity_type_manager->getStorage('search_api_autocomplete_search');
+    foreach ($autocomplete_storage->loadByProperties(['index_id' => array_values($entity_ids['search_api_index'])]) as $search) {
+      $entity_ids['search_api_autocomplete_search'][$search->id()] = $search->id();
+    }
+  }
+  if ($entity_type_manager->hasDefinition('search_api_sorts_field')) {
+    $sort_storage = $entity_type_manager->getStorage('search_api_sorts_field');
+    foreach ($sort_storage->loadMultiple() as $sort) {
+      $display = explode('---', $sort->get('display_id'), 2);
+      $view_id = explode('__', $display[1] ?? '')[0];
+      if (isset($entity_ids['view'][$view_id])) {
+        $entity_ids['search_api_sorts_field'][$sort->id()] = $sort->id();
       }
+    }
+  }
+
+  // Dependents first. Use normal entity deletion so core can fix or remove
+  // additional configuration dependencies rather than leave dangling references.
+  $entity_type_order = [
+    'block',
+    'search_api_sorts_field',
+    'search_api_autocomplete_search',
+    'facets_facet',
+    'facets_facet_source',
+    'view',
+    'search_api_index',
+    'search_api_server',
+  ];
+  $deleted = 0;
+  foreach (array_unique(array_merge($entity_type_order, array_keys($entity_ids))) as $entity_type_id) {
+    if (empty($entity_ids[$entity_type_id])) {
+      continue;
+    }
+    $storage = $entity_type_manager->getStorage($entity_type_id);
+    foreach ($storage->loadMultiple(array_values($entity_ids[$entity_type_id])) as $entity) {
+      if ($entity_type_id === 'search_api_index') {
+        $entity->set('read_only', TRUE);
+      }
+      $entity->delete();
+      $deleted++;
     }
   }
 
@@ -113,14 +138,9 @@ function metsis_search_uninstall(bool $is_syncing = FALSE): void {
   \Drupal::cache('render')->invalidateAll();
 
   \Drupal::logger('metsis_search')->notice(
-    'metsis_search uninstalled. Deleted @count module-owned configuration '
-    . 'objects, including @facets facets, and @blocks facet block placements. '
+    'metsis_search uninstalled. Deleted @count search configuration entities. '
     . 'Solr index data has been preserved (must be cleared manually if required).',
-    [
-      '@count' => $deleted + $deleted_facets,
-      '@facets' => $deleted_facets,
-      '@blocks' => $deleted_blocks,
-    ]
+    ['@count' => $deleted]
   );
 }
 
