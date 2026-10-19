@@ -132,7 +132,7 @@ final class MetsisMapsTest extends WebDriverTestBase {
    */
   private function assertMap(string $selector, int $height): void {
     $element = $this->assertSession()->waitForElementVisible('css', $selector);
-    self::assertNotNull($element);
+    self::assertNotNull($element, "Map viewport not visible: $selector. Page text: " . $this->getSession()->getPage()->getText());
     $selector_json = json_encode($selector, JSON_THROW_ON_ERROR);
     $this->getSession()->executeScript("document.querySelector($selector_json).scrollIntoView(); document.querySelector($selector_json).dispatchEvent(new Event('pointerenter'));");
     $script = "const e = document.querySelector($selector_json); const c = e?.querySelector('canvas'); return !!c && c.width > 100 && c.height >= $height - 1 && Math.abs(e.getBoundingClientRect().height - $height) < 2;";

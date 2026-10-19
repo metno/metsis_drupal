@@ -104,6 +104,14 @@ installs dependencies, symlinks the module, and provisions MMD for tests.
 
 The PHPUnit job provisions matching Chrome/ChromeDriver, starts WebDriver on
 `127.0.0.1:4444` and a multi-worker PHP Drupal server on `127.0.0.1:8888`,
-and checks both services before testing. Headless Chrome uses software WebGL
+and checks both services before testing. Start the PHP server with `web/` as its
+working directory and an absolute router path: Drupal plugin discovery uses
+paths relative to the document root, and a module-root working directory can
+produce an HTTP 500 reporting that `block_page` does not exist.
+
+CI runs the suites configured in `phpunit.xml` without a positional `tests/`
+argument. That argument limits discovery to the parent module and omits the
+20 NBS submodule tests (159 tests instead of 179 in the current checkout).
+Headless Chrome uses software WebGL
 for map canvases. Failed runs upload server/driver logs and browser output as
 `phpunit-browser-diagnostics`.
