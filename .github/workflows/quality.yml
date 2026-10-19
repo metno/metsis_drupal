@@ -155,7 +155,11 @@ jobs:
           export MINK_DRIVER_ARGS_WEBDRIVER="$(jq -cn --arg binary "$CHROME_PATH" \
             '["chrome", {"goog:chromeOptions": {"w3c": true, "binary": $binary, "args": ["--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--window-size=1440,1200", "--enable-unsafe-swiftshader"]}}, "http://127.0.0.1:4444"]')"
 
-          PHP_CLI_SERVER_WORKERS=4 php -S 127.0.0.1:8888 -t web web/.ht.router.php > .artifacts/php-server.log 2>&1 &
+          (
+            cd "$GITHUB_WORKSPACE/web"
+            PHP_CLI_SERVER_WORKERS=4 exec php -S 127.0.0.1:8888 \
+              -t "$GITHUB_WORKSPACE/web" "$GITHUB_WORKSPACE/web/.ht.router.php"
+          ) > .artifacts/php-server.log 2>&1 &
           server_pid=$!
           "$CHROMEDRIVER_PATH" --port=4444 --allowed-ips=127.0.0.1 > .artifacts/chromedriver.log 2>&1 &
           driver_pid=$!
@@ -176,7 +180,7 @@ jobs:
             exit 1
           fi
 
-          vendor/bin/phpunit --configuration="$GITHUB_WORKSPACE/phpunit.ci.xml" tests/
+          vendor/bin/phpunit --configuration="$GITHUB_WORKSPACE/phpunit.ci.xml"
 
       - name: Upload browser test diagnostics
         if: failure()
