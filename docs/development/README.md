@@ -91,6 +91,12 @@ outer `.metsis-search-map` wrapper, which also contains the projection selector.
 The test explicitly configures 400px result-map and 250px bbox-map heights,
 checks canvas backing dimensions, and reports measured dimensions on failure.
 
+The `metsis_map_test` fixture replaces both search execution and Solr field
+discovery. Its service provider selects a config-only field manager after all
+service definitions load, preserving configured datasource fields without a
+Solr connection. The browser test clears the field-definition cache and checks
+the bbox field type before saving the View, covering fresh CI installations.
+
 The [quality workflow](../../.github/workflows/quality.yml) runs ESLint, Prettier,
 PHPStan, PHPCS, and PHPUnit. The reusable
 [Drupal preparation action](../../.github/actions/drupal-prepare/action.yml)

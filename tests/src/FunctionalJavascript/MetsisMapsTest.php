@@ -6,6 +6,7 @@ namespace Drupal\Tests\metsis_drupal\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Core\Config\FileStorage;
+use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\views\Entity\View;
 use PHPUnit\Framework\Attributes\Group;
@@ -61,6 +62,11 @@ final class MetsisMapsTest extends WebDriverTestBase {
     $server->set('backend', 'metsis_map_test');
     $server->set('backend_config', []);
     $server->save();
+    // Exercise field discovery without relying on a previously populated cache.
+    $this->container->get('cache.discovery')->delete('solr_field_definitions:metsis');
+    $definitions = Index::load('metsis')->getDatasource('solr_document')->getPropertyDefinitions();
+    self::assertArrayHasKey('bbox', $definitions);
+    self::assertSame('solr_bbox', $definitions['bbox']->getDataType());
     $view = View::load('metsis_search');
     $displays = $view->get('display');
     $options = &$displays['default']['display_options'];
