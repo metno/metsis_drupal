@@ -148,9 +148,11 @@
 
 	{% for section in sections %}
 		<section class="metsis-metadata__section" aria-labelledby="section-{{ loop.index }}">
-			<h2 id="section-{{ loop.index }}">{{ section.title }}</h2>
+      <h2 id="section-{{ loop.index }}">{{ section.field == 'data_center' ? 'Data center'|t : section.title }}</h2>
 
-			{% if section.field == 'personnel_json' and section.personnel_groups is defined and section.personnel_groups is not empty %}
+      {% if section.field == 'data_center' %}
+        {% include 'metsis_drupal:data_center' with section.value only %}
+      {% elseif section.field == 'personnel_json' and section.personnel_groups is defined and section.personnel_groups is not empty %}
 				<div class="metsis-metadata__personnel-groups">
 					{% for group in section.personnel_groups %}
 						<article class="metsis-metadata__personnel-role" aria-label="{{ group.role }}">

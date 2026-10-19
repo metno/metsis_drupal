@@ -230,6 +230,18 @@ final class MetadataDocumentNormalizer {
       ];
     }
 
+    $data_center = $this->buildDataCenterSection($document);
+    if ($data_center !== NULL) {
+      $position = 0;
+      foreach ($sections as $index => $section) {
+        if ($section['field'] === 'personnel_json') {
+          $position = $index + 1;
+          break;
+        }
+      }
+      array_splice($sections, $position, 0, [$data_center]);
+    }
+
     // Time and geography section with geometry map.
     $time_geography_data = $this->extractSimpleFieldsWithLabels($document, [
       'temporal_extent_start_date' => 'Start date',
@@ -301,6 +313,52 @@ final class MetadataDocumentNormalizer {
       }
       return !empty($section['value']);
     }));
+  }
+
+  /**
+   * Builds a data-center section from stored Solr fields.
+   *
+   * @param array<string, mixed> $document
+   *   Solr document.
+   *
+   * @return array<string, mixed>|null
+   *   Normalized section, or NULL when no name or usable URL is available.
+   */
+  private function buildDataCenterSection(array $document): ?array {
+    $names = [];
+    foreach (['long_name', 'name', 'short_name'] as $field) {
+      $text = implode(', ', $this->extractInlineValues($document['data_center_' . $field] ?? ''));
+      $names[$field] = preg_replace('/\s+/', ' ', $text);
+    }
+    $name = $names['long_name'] ?: ($names['name'] ?: $names['short_name']);
+    $short_name = $names['short_name'];
+    // Match complete labels, not an acronym embedded in an unrelated word.
+    $included = $short_name !== '' && preg_match(
+      '/(?<![\p{L}\p{N}])' . preg_quote($short_name, '/') . '(?![\p{L}\p{N}])/iu',
+      $name,
+    ) === 1;
+    if ($included || mb_strlen($short_name) >= mb_strlen($name)) {
+      $short_name = '';
+    }
+
+    $url = $this->normalizeUri($document['data_center_url'] ?? '');
+    if (!in_array(strtolower((string) parse_url($url, PHP_URL_SCHEME)), ['http', 'https'], TRUE)) {
+      $url = '';
+    }
+    if ($name === '' && $url === '') {
+      return NULL;
+    }
+
+    return [
+      'title' => 'Data center',
+      'field' => 'data_center',
+      'is_structured' => FALSE,
+      'value' => [
+        'name' => $name,
+        'short_name' => $short_name,
+        'resource_url' => $url,
+      ],
+    ];
   }
 
   /**

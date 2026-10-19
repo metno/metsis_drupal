@@ -1,0 +1,15 @@
+{% if name or resource_url %}
+  <div {{ attributes.addClass('metsis-data-center') }}>
+    {% if resource_url %}
+      <a class="metsis-data-center__name" href="{{ resource_url }}" target="_blank" rel="noopener noreferrer">
+        {{ name|default('Data center'|t) }}
+        <span class="visually-hidden">{{ '(opens in a new window)'|t }}</span>
+      </a>
+    {% else %}
+      <span class="metsis-data-center__name">{{ name }}</span>
+    {% endif %}
+    {% if short_name %}
+      <span class="metsis-data-center__short-name">{{ short_name }}</span>
+    {% endif %}
+  </div>
+{% endif %}

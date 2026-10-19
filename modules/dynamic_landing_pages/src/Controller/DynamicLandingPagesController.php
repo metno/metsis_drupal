@@ -97,7 +97,7 @@ final class DynamicLandingPagesController extends ControllerBase {
     }
 
     $full_id   = $this->buildFullId($id);
-    $cache_key = 'dataset:' . $full_id;
+    $cache_key = 'dataset:v2:' . $full_id;
     $solr_id   = MetsisSolrUtilities::toSolrId($full_id);
 
     // Check the custom cache bin and validate Solr timestamps.

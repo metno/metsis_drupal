@@ -60,6 +60,10 @@ at `/admin/config/metno/metsis-drupal` and open `/metsis/search`.
 Optional submodules include `dynamic_landing_pages` for dataset landing pages
 and `nbs_extensions` for product-aware NetCDF on-demand requests.
 
+Metadata details and dynamic landing pages share an accessible
+[Data center section](docs/metadata.md#data-center) with name fallbacks and
+optional short-name subtext.
+
 ## 5. Development and testing
 
 See [development and CI](docs/development/README.md) for DDEV commands, builds,

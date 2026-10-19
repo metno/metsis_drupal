@@ -7,6 +7,7 @@ namespace Drupal\Tests\metsis_drupal\Unit;
 use Drupal\metsis_drupal\Service\MetadataDocumentNormalizer;
 use Drupal\metsis_drupal\Service\MetVocabServiceInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -400,6 +401,118 @@ final class MetadataDocumentNormalizerTest extends TestCase {
       'doi:10.1594/PANGAEA.995890',
       $child_info['related_dataset']['text'],
     );
+  }
+
+  /**
+   * Tests the data-center section using representative stored Solr values.
+   *
+   * @param array<string, mixed> $document
+   *   Source fields.
+   * @param array<string, string>|null $expected
+   *   Expected presentation data, or NULL for an omitted section.
+   */
+  #[DataProvider('dataCenterDocuments')]
+  public function testDataCenter(array $document, ?array $expected): void {
+    $sections = array_column($this->normalizer->buildSections($document), NULL, 'field');
+    if ($expected === NULL) {
+      self::assertArrayNotHasKey('data_center', $sections);
+    }
+    else {
+      self::assertSame($expected, $sections['data_center']['value']);
+      self::assertSame('Data center', $sections['data_center']['title']);
+    }
+  }
+
+  /**
+   * Provides real naming patterns and missing/unsafe field cases.
+   *
+   * @return iterable<string, array>
+   *   Source documents and expected normalized data.
+   */
+  public static function dataCenterDocuments(): iterable {
+    $base = [
+      'data_center_long_name' => 'Norwegian Meteorological Institute',
+      'data_center_short_name' => 'METNO',
+      'data_center_name' => 'METNO',
+      'data_center_url' => 'https://met.no',
+    ];
+    $expected = [
+      'name' => 'Norwegian Meteorological Institute',
+      'short_name' => 'METNO',
+      'resource_url' => 'https://met.no',
+    ];
+    yield 'all fields' => [$base, $expected];
+    yield 'short label with spaces' => [
+      array_replace($base, ['data_center_short_name' => 'MET Norway']),
+      array_replace($expected, ['short_name' => 'MET Norway']),
+    ];
+    yield 'slash-separated short label' => [
+      array_replace($base, ['data_center_short_name' => 'NO/MET/ADC']),
+      array_replace($expected, ['short_name' => 'NO/MET/ADC']),
+    ];
+    yield 'combined fallback' => [
+      ['data_center_name' => 'Norwegian Polar Institute', 'data_center_short_name' => 'NPI'],
+      ['name' => 'Norwegian Polar Institute', 'short_name' => 'NPI', 'resource_url' => ''],
+    ];
+    yield 'short only' => [
+      ['data_center_short_name' => 'Norwegian Polar Institute'],
+      ['name' => 'Norwegian Polar Institute', 'short_name' => '', 'resource_url' => ''],
+    ];
+    yield 'long only' => [
+      ['data_center_long_name' => 'GEUS'],
+      ['name' => 'GEUS', 'short_name' => '', 'resource_url' => ''],
+    ];
+    yield 'full name repeated with whitespace and case' => [
+      ['data_center_long_name' => ' Polar  Data Centre ', 'data_center_short_name' => "polar\tdata centre"],
+      ['name' => 'Polar Data Centre', 'short_name' => '', 'resource_url' => ''],
+    ];
+    yield 'short longer than primary' => [
+      ['data_center_long_name' => 'IADC', 'data_center_short_name' => 'Italian Arctic Data Center'],
+      ['name' => 'IADC', 'short_name' => '', 'resource_url' => ''],
+    ];
+    yield 'already parenthesized' => [
+      ['data_center_long_name' => 'Infrastructure for Research Data (NIRD)', 'data_center_short_name' => 'nird'],
+      ['name' => 'Infrastructure for Research Data (NIRD)', 'short_name' => '', 'resource_url' => ''],
+    ];
+    yield 'acronym inside unrelated word' => [
+      array_replace($base, ['data_center_short_name' => 'MET']),
+      array_replace($expected, ['short_name' => 'MET']),
+    ];
+    yield 'array wrapped fields' => [array_map(static fn(string $value): array => [$value], $base), $expected];
+    foreach (['javascript:alert(1)', 'ftp://example.org', '/relative', 'not a URL'] as $url) {
+      yield 'unlinked ' . $url => [
+        array_replace($base, ['data_center_url' => $url]),
+        array_replace($expected, ['resource_url' => '']),
+      ];
+    }
+    yield 'HTTP retained' => [
+      array_replace($base, ['data_center_url' => 'http://met.no']),
+      array_replace($expected, ['resource_url' => 'http://met.no']),
+    ];
+    yield 'URL only' => [
+      ['data_center_url' => 'https://met.no'],
+      ['name' => '', 'short_name' => '', 'resource_url' => 'https://met.no'],
+    ];
+    yield 'absent' => [[], NULL];
+    yield 'invalid URL only' => [['data_center_url' => 'javascript:alert(1)'], NULL];
+    yield 'empty names' => [
+      ['data_center_long_name' => ' ', 'data_center_name' => NULL, 'data_center_short_name' => []],
+      NULL,
+    ];
+  }
+
+  /**
+   * Tests data center follows Personnel, or comes first without Personnel.
+   */
+  public function testDataCenterSectionOrder(): void {
+    $document = [
+      'data_center_name' => 'METNO',
+      'personnel_json' => [['name' => 'Example Person', 'role' => 'Investigator']],
+      'data_access_json' => [['type' => 'HTTP', 'resource' => 'https://example.org/data']],
+    ];
+    self::assertSame(['personnel_json', 'data_center', 'data_access_json'], array_column($this->normalizer->buildSections($document), 'field'));
+    unset($document['personnel_json']);
+    self::assertSame(['data_center', 'data_access_json'], array_column($this->normalizer->buildSections($document), 'field'));
   }
 
   /**

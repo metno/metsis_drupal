@@ -242,6 +242,60 @@ final class SdcComponentsTest extends UnitTestCase {
   }
 
   /**
+   * Tests escaped names, subtext, accessible links and URL-only fallback.
+   */
+  public function testDataCenterRendering(): void {
+    $props = [
+      'name' => 'Center <script>alert(1)</script>',
+      'short_name' => 'DC & Co',
+      'resource_url' => 'https://example.org/?a=1&b=2',
+    ];
+    $html = $this->renderComponent('data_center', $props);
+    $this->assertStringContainsString('Center &lt;script&gt;', $html);
+    $this->assertStringNotContainsString('<script>', $html);
+    $this->assertStringContainsString('DC &amp; Co', $html);
+    $this->assertStringContainsString('href="https://example.org/?a=1&amp;b=2"', $html);
+    $this->assertStringContainsString('target="_blank"', $html);
+    $this->assertStringContainsString('rel="noopener noreferrer"', $html);
+    $this->assertStringContainsString('class="visually-hidden">(opens in a new window)</span>', $html);
+    $plain = $this->renderComponent('data_center', ['name' => 'Center']);
+    $this->assertStringNotContainsString('<a ', $plain);
+    $this->assertStringNotContainsString('metsis-data-center__short-name', $plain);
+    $this->assertStringNotContainsString('opens in', $plain);
+    $this->assertStringContainsString('Data center', $this->renderComponent('data_center', ['resource_url' => 'https://example.org']));
+    $this->assertSame('', trim($this->renderComponent('data_center')));
+  }
+
+  /**
+   * Tests both metadata templates consume the same normalized section.
+   */
+  public function testDataCenterComposition(): void {
+    foreach ([
+      'templates/metadata/metsis-metadata-document.html.twig',
+      'modules/dynamic_landing_pages/templates/dynamic-landing-page.html.twig',
+    ] as $template) {
+      $html = $this->twig()->createTemplate(file_get_contents(self::root() . '/' . $template))->render([
+        'sections' => [
+          [
+            'field' => 'data_center',
+            'title' => 'Data center',
+            'value' => [
+              'name' => 'Norwegian Meteorological Institute',
+              'short_name' => 'METNO',
+              'resource_url' => 'https://met.no',
+            ],
+          ],
+        ],
+      ]);
+      $this->assertStringContainsString('>Data center</h2>', $html, $template);
+      $this->assertStringContainsString('Norwegian Meteorological Institute', $html, $template);
+      $this->assertStringContainsString('metsis-data-center__short-name">METNO</span>', $html, $template);
+      $this->assertStringContainsString('href="https://met.no"', $html, $template);
+      $this->assertStringContainsString('(opens in a new window)', $html, $template);
+    }
+  }
+
+  /**
    * Loads a definition with the metadata normally supplied by discovery.
    *
    * @param string $name
