@@ -6,5 +6,6 @@ hooks:
     - exec: |
         set -eu
         sudo mkdir -p "${HOME}/.vscode-server/data"
+        sudo chown -R "$(id -u):$(id -g)" "${HOME}/.vscode-server"
         sudo chown -R "$(id -u):$(id -g)" "${HOME}/.vscode-server/data"
         chmod 700 "${HOME}/.vscode-server/data"

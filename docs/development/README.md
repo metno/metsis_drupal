@@ -72,6 +72,12 @@ while core schema and rendering checks still run. Vocabulary tests require
 
 ## 4. Browser tests and CI
 
+For interactive UI diagnosis with the VS Code browser/Playwright MCP tools,
+agents can load the workspace
+[playwright-development skill](../../.agents/skills/playwright-development/SKILL.md).
+It covers page sharing, computed dimensions, map isolation, Views AJAX/HTMX,
+safe fixtures, and the distinction from PHPUnit WebDriver infrastructure.
+
 Local browser-suite execution requires a compatible ChromeDriver/WebDriver
 endpoint, `SIMPLETEST_BASE_URL`, a test database via `SIMPLETEST_DB`, and
 `MINK_DRIVER_ARGS_WEBDRIVER`.
@@ -79,6 +85,11 @@ endpoint, `SIMPLETEST_BASE_URL`, a test database via `SIMPLETEST_DB`, and
 ```bash
 vendor/bin/phpunit --configuration=phpunit.xml tests/src/FunctionalJavascript/MetsisMapsTest.php
 ```
+
+Map-height assertions measure `.metsis-search-map .map-container`, not the
+outer `.metsis-search-map` wrapper, which also contains the projection selector.
+The test explicitly configures 400px result-map and 250px bbox-map heights,
+checks canvas backing dimensions, and reports measured dimensions on failure.
 
 The [quality workflow](../../.github/workflows/quality.yml) runs ESLint, Prettier,
 PHPStan, PHPCS, and PHPUnit. The reusable

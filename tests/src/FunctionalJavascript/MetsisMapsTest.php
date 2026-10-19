@@ -69,6 +69,9 @@ final class MetsisMapsTest extends WebDriverTestBase {
       if (($filter['plugin_id'] ?? '') !== 'metsis_filter_bbox') {
         unset($options['filters'][$id]);
       }
+      else {
+        $options['filters'][$id]['expose']['map_height'] = 250;
+      }
     }
     $options['header'] = [
       'metsis_map' => [
@@ -93,7 +96,7 @@ final class MetsisMapsTest extends WebDriverTestBase {
    */
   public function testMaps(): void {
     $this->drupalGet('metsis/search');
-    $this->assertMap('.metsis-search-map', 400);
+    $this->assertMap('.metsis-search-map .map-container', 400);
     $this->assertMap('.bbox-map-filter-container', 250);
     $width = $this->getSession()->evaluateScript('document.querySelector(".metsis-filters").getBoundingClientRect().width');
     $rem = $this->getSession()->evaluateScript('parseFloat(getComputedStyle(document.documentElement).fontSize)');
@@ -105,7 +108,7 @@ final class MetsisMapsTest extends WebDriverTestBase {
     $this->getSession()->getPage()->find('css', '.metsis-filters input[type="submit"]')->click();
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertMap('.bbox-map-filter-container', 250);
-    $this->assertMap('.metsis-search-map', 400);
+    $this->assertMap('.metsis-search-map .map-container', 400);
 
     $this->drupalPlaceBlock('metsis_search_exposed_form', [
       'id' => 'map_filter_block',
@@ -127,7 +130,9 @@ final class MetsisMapsTest extends WebDriverTestBase {
     $selector_json = json_encode($selector, JSON_THROW_ON_ERROR);
     $this->getSession()->executeScript("document.querySelector($selector_json).scrollIntoView(); document.querySelector($selector_json).dispatchEvent(new Event('pointerenter'));");
     $script = "const e = document.querySelector($selector_json); const c = e?.querySelector('canvas'); return !!c && c.width > 100 && c.height >= $height - 1 && Math.abs(e.getBoundingClientRect().height - $height) < 2;";
-    self::assertTrue($this->getSession()->wait(15000, "(function() { $script })()"), "Rendered map dimensions: $selector");
+    $ready = $this->getSession()->wait(15000, "(function() { $script })()");
+    $dimensions = $this->getSession()->evaluateScript("(function() { const e = document.querySelector($selector_json); return JSON.stringify({width: e?.getBoundingClientRect().width, height: e?.getBoundingClientRect().height, canvases: Array.from(e?.querySelectorAll('canvas') ?? [], c => ({width: c.width, height: c.height}))}); })()");
+    self::assertTrue($ready, "Rendered map dimensions: $selector; expected height: $height; actual: $dimensions");
   }
 
 }

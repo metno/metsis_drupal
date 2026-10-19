@@ -48,7 +48,8 @@
     "suggest": {
         "drupal/back_to_top": "Add back to top icon on scrolling",
         "drupal/extlink": "Add icon to external links",
-        "drupal/markdown": "Render help page README.md with markdown parser"
+        "drupal/markdown": "Render help page README.md with markdown parser",
+        "drupal/views_dependent_filter": "Allow filters to depend on values of other filters"
     },
     "require-dev": {
         "drupal/devel": "^4.0 || ^5.0",
