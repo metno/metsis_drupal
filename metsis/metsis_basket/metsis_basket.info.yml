@@ -1,7 +1,7 @@
 name: 'METSIS basket'
 description: 'Provides a user basket.'
 core_version_requirement: ^10 || ^11
-version: 2.0.2
+version: 2.1.0
 package: METSIS
 dependencies:
   - metsis_lib:metsis_lib

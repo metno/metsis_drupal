@@ -1,7 +1,7 @@
 name: 'METSIS WMS'
 description: 'Provides an OL6 WMS client interface.'
 core_version_requirement: ^10 || ^11
-version: 2.0.3
+version: 2.1.0
 package: METSIS
 #dependencies:
 #  metsis_lib: 'drupal:metsis_lib'

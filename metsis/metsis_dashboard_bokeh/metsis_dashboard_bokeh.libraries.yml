@@ -1,5 +1,5 @@
 bokeh:
-  version: 1.0.2
+  version: 2.3.3
   js:
     https://cdn.pydata.org/bokeh/release/bokeh-2.3.3.min.js: { type: external, minified: true}
     js/ts_plot.js: {}
@@ -12,10 +12,10 @@ bokeh:
     - metsis_dashboard_bokeh/bokeh_widgets
     - metsis_dashboard_bokeh/bokeh_tables
 bokeh_widgets:
-  version: 1.0.2
+  version: 2.3.3
   js:
     https://cdn.pydata.org/bokeh/release/bokeh-widgets-2.3.3.min.js: { type: external, minified: true}
 bokeh_tables:
-  version: 1.0.2
+  version: 2.3.3
   js:
     https://cdn.pydata.org/bokeh/release/bokeh-tables-2.3.3.min.js: { type: external, minified: true}

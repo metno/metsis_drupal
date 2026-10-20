@@ -1,11 +1,11 @@
 metadata_search_view:
-  version: 1.0.5
+  version: 1.1.0
   css:
     theme:
       css/metadata_search_view.css: {}
 
 ts_plot:
-  version: 1.0.4
+  version: 2.3.3
   js:
     https://cdn.pydata.org/bokeh/release/bokeh-2.3.3.min.js: { type: external, minified: true}
     https://cdn.pydata.org/bokeh/release/bokeh-widgets-2.3.3.min.js: { type: external, minified: true}
@@ -19,7 +19,7 @@ ts_plot:
     - core/drupalSettings
 
 search_map:
-  version: 1.0.6
+  version: 1.1.0
   css:
     theme:
       css/metsis_qsearch.css: {}
@@ -39,7 +39,7 @@ search_map:
     #- metsis_search/map_ol_ext
 
 search_map_block:
-  version: 1.0.6
+  version: 1.1.0
   css:
     theme:
       #/libraries/openlayers-6.5.0/ol.css: {minified: true}
@@ -71,7 +71,7 @@ search_map_block:
 
 
 map_ol:
-  version: 6.5.1
+  version: 6.5.2
   header: true
   css:
     theme:
@@ -91,7 +91,7 @@ map_ol:
 
 map_projs:
   header: true
-  version: 2.6.3
+  version: 2.6.4
   js:
     /libraries/proj4js-2.6.3/dist/proj4.js: { minified: true, preprocess: false}
   dependencies:
@@ -134,7 +134,7 @@ map_geocoder:
   #- metsis_search/map_ol
 
 children_count:
-  version: 1.0.1
+  version: 1.1.0
   js:
     js/children_count.js: {}
   dependencies:
@@ -144,7 +144,7 @@ children_count:
     - core/drupal.ajax
 
 thumbnail_lazy:
-  version: 1.0.1
+  version: 1.1.0
   js:
     js/thumbnail_lazy.js: {}
   dependencies:
@@ -155,7 +155,7 @@ thumbnail_lazy:
     - lazy/lazysizes
 
 gcmd:
-  version: 1.0.1
+  version: 1.1.0
   css:
     theme:
       css/gcmd.css: {}
@@ -163,12 +163,12 @@ gcmd:
     js/gcmd.js: {}
 
 export:
-  version: 1.0.1
+  version: 1.1.0
   js:
     js/export.js: {}
 
 parent_filter:
-  version: 1.0.1
+  version: 1.1.0
   js:
     js/remove_parent_filter.js: {}
   depedencies:

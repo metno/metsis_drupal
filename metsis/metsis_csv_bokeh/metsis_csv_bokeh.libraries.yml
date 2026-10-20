@@ -1,5 +1,5 @@
 style:
-  version: 1.x
+  version: 2.0.0
   css:
     theme:
       css/metsis_csv_bokeh.css: {}

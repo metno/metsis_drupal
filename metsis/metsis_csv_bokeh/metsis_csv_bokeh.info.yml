@@ -1,7 +1,7 @@
 name: 'METSIS CSV Bokeh'
 description: 'Drupal module to download ASCII from OPeNDAP uri'
 core_version_requirement: ^10 || ^11
-version: 2.0.2
+version: 2.1.0
 package: METSIS
 type: module
 configure: metsis_csv_bokeh.admin_settings_form

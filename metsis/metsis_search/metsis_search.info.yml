@@ -2,7 +2,7 @@ name: 'Metsis Search'
 type: module
 description: 'METSIS Metadata Search'
 core_version_requirement: '^10 || ^11'
-version: 2.0.3
+version: 2.1.0
 package: METSIS
 dependencies:
   - search_api_solr:search_api_solr

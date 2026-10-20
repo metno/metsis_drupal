@@ -1,47 +1,47 @@
 metsis_lib:
-  version: 1.x
+  version: 2.0.0
   css:
     theme:
       css/metsis_lib.css: {}
 
 tables:
-  version: 1.x
+  version: 2.0.0
   css:
     theme:
       css/tables.css: {}
 
 icons:
-  version: 1.x
+  version: 2.0.0
   css:
     component:
       css/contrib/icons.css: {}
 
 adc_buttons:
-  version: 1.x
+  version: 2.0.0
   css:
     component:
       css/adc-buttons.css: {}
 
 autocomplete:
-  version: 1.x
+  version: 2.0.0
   css:
     theme:
       css/autocomplete.css: {}
 
 map_thumbnails:
-  version: 1.x
+  version: 2.0.0
   css:
     component:
       css/map_thumbnails.css: {}
 
 popups:
-  version: 1.x
+  version: 2.0.0
   css:
     component:
       css/popups.css: {}
 
 utils:
-  version: 1.x
+  version: 2.0.0
   header: true
   js:
     js/custom/utils.js: {}
@@ -51,12 +51,12 @@ utils:
     - core/drupal
 
 landing_page:
-  version: 1.0.1
+  version: 1.2.0
   css:
     theme:
       css/landing_page.css: {}
 go_back:
-  version: 1.0.0
+  version: 1.3.0
   js:
     js/custom/go_back.js: {}
 
