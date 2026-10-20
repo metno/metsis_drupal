@@ -69,6 +69,12 @@ adapts to the theme's available content width. Result cards and temporal
 controls reflow within narrow columns, retaining usable mobile abstracts
 and collection actions.
 
+Result-row [component settings](docs/search-and-views.md#2-layout-and-templates)
+configure temporal extent notation/icon, DOI and icon sizes. Metadata details
+and landing pages fall back to the [license text](docs/metadata.md#license)
+when no license identifier exists. Result maps list overlapping feature titles
+on hover and open a [feature popup](docs/maps.md) with dataset details on click.
+
 ## 5. Development and testing
 
 See [development and CI](docs/development/README.md) for DDEV commands, builds,

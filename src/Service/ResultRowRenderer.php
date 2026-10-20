@@ -148,6 +148,7 @@ final class ResultRowRenderer {
    */
   public function renderRow(array $solr_doc, array $options, array $highlighted): array {
     $fields = [];
+    $icon_width = max(16, (int) ($options['component_icon_width'] ?? 88));
 
     // Handle title. Use highlighted field if available.
     $fields['title'] = [
@@ -178,7 +179,8 @@ final class ResultRowRenderer {
     }
     if (!empty($solr_doc['use_constraint_identifier'])) {
       $fields['license_icon'] = $this->getLicenseIconMarkup(
-        $solr_doc['use_constraint_identifier']
+        $solr_doc['use_constraint_identifier'],
+        $icon_width,
       );
     }
     if (!empty($solr_doc['use_constraint_license_text'])) {
@@ -191,7 +193,8 @@ final class ResultRowRenderer {
     }
     if (!empty($solr_doc['isParent']) && $solr_doc['isParent'] == TRUE) {
       $fields['parent'] = $this->getCollectionIconMarkup(
-        $solr_doc['metadata_identifier']
+        $solr_doc['metadata_identifier'],
+        $icon_width,
       );
       if (isset($solr_doc['found_children'], $solr_doc['total_children'])) {
         $fields['children_count'] = $this->getChildDatasetCountMarkup($solr_doc);
@@ -206,7 +209,12 @@ final class ResultRowRenderer {
       $var = $solr_doc['dataset_citation_doi'];
       $doi_uri = is_string($var) ? $var : (is_array($var) ? reset($var) : NULL);
       if (NULL !== $doi_uri) {
-        $fields['doi_icon'] = $this->getDoiIconMarkup($doi_uri);
+        $fields['doi_icon'] = $this->getDoiIconMarkup(
+          $doi_uri,
+          (bool) ($options['doi_show_identifier'] ?? FALSE),
+          (bool) ($options['doi_logo_color'] ?? TRUE),
+          max(12, (int) ($options['doi_icon_size'] ?? 24)),
+        );
       }
     }
 
@@ -230,7 +238,14 @@ final class ResultRowRenderer {
     }
 
     $fields['last_metadata_update'] = $this->getLatestMetadataUpdate($solr_doc);
-    $fields['temporal_extent'] = $this->getTemporalExtentMarkup($solr_doc);
+    $icon_id = trim((string) ($options['temporal_extent_icon_id'] ?? ''));
+    $fields['temporal_extent'] = $this->getTemporalExtentMarkup(
+      $solr_doc,
+      (bool) ($options['temporal_extent_add_icon'] ?? TRUE),
+      $icon_id !== '' ? $icon_id : 'date-time',
+      (bool) ($options['temporal_extent_short_notation'] ?? FALSE),
+      (bool) ($options['temporal_extent_compact_labels'] ?? TRUE),
+    );
 
     return $fields;
   }
@@ -389,11 +404,14 @@ final class ResultRowRenderer {
    * @param bool $color
    *   (Optional) Use colored icon (origianl DOI logo).
    *   Default: True.
+   * @param int $size
+   *   (Optional) The DOI icon size in pixels.
+   *   Default: 24.
    *
    * @return array
    *   The render array for this component.
    */
-  public function getDoiIconMarkup(string $doi_url, bool $show_identifier = FALSE, bool $color = TRUE): array {
+  public function getDoiIconMarkup(string $doi_url, bool $show_identifier = FALSE, bool $color = TRUE, int $size = 24): array {
     // Return the doi Icon with url.
     return [
       '#type' => 'component',
@@ -402,6 +420,7 @@ final class ResultRowRenderer {
         'doi_url' => $doi_url,
         'show_doi_identifier' => $show_identifier,
         'color' => $color,
+        'size' => $size,
       ],
     ];
   }
@@ -411,11 +430,13 @@ final class ResultRowRenderer {
    *
    * @param string $license_code
    *   The license code.
+   * @param int $width
+   *   (Optional) The icon width in pixels.
    *
    * @return array
    *   The render array for the license icon component.
    */
-  public function getLicenseIconMarkup(string $license_code): array {
+  public function getLicenseIconMarkup(string $license_code, int $width = 88): array {
     // Get the config for license icons mapping.
     $license_icons_config = $this->configProvider->getLicenseIconsConfig();
     $licenses = $license_icons_config->get('license_icons');
@@ -443,7 +464,7 @@ final class ResultRowRenderer {
         'license_url' => $license['license_uri'],
         'icon_id' => $license['icon_id'],
         'icon_alt_text' => $license['icon_alt_text'],
-        'width' => 88,
+        'width' => $width,
       ],
     ];
   }
@@ -453,17 +474,19 @@ final class ResultRowRenderer {
    *
    * @param string $parent_id
    *   The id of this collection.
+   * @param int $width
+   *   (Optional) The icon width in pixels.
    *
    * @return array
    *   The render array for this component.
    */
-  public function getCollectionIconMarkup(string $parent_id): array {
+  public function getCollectionIconMarkup(string $parent_id, int $width = 88): array {
     return [
       '#type' => 'component',
       '#component' => 'metsis_drupal:collection',
       '#props' => [
         'icon_alt_text' => 'Collection',
-        'width' => 88,
+        'width' => $width,
       ],
     ];
   }

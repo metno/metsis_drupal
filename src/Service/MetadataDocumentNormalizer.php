@@ -54,7 +54,9 @@ final class MetadataDocumentNormalizer {
    *
    * No vocabulary lookup is performed for the license: the identifier is
    * rendered as plain text, linked to the use constraint resource when one
-   * is available, and left unlinked otherwise.
+   * is available, and left unlinked otherwise. When no identifier exists the
+   * free-text license is used instead, split into text and HTTP(S) link
+   * segments so Twig can render the links without raw markup.
    *
    * @param array<string, mixed> $document
    *   Solr document.
@@ -65,13 +67,50 @@ final class MetadataDocumentNormalizer {
   private function buildLicenseValueNode(array $document): array {
     $identifier = $this->toInlineText($document['use_constraint_identifier'] ?? '');
     $resource_url = $identifier !== '' ? $this->normalizeUri($document['use_constraint_resource'] ?? '') : '';
+    $license_text = $identifier === '' ? $this->toInlineText($document['use_constraint_license_text'] ?? '') : '';
 
     return [
-      'text' => $identifier !== '' ? $identifier : 'Not provided',
+      'text' => $identifier !== '' ? $identifier : ($license_text !== '' ? $license_text : 'Not provided'),
       'resource_url' => $resource_url,
+      'segments' => $license_text !== '' ? $this->buildLinkSegments($license_text) : [],
       'popover_id' => '',
       'vocabulary' => NULL,
     ];
+  }
+
+  /**
+   * Split free text into plain text and HTTP(S) URL segments.
+   *
+   * @param string $text
+   *   Free text that may contain URLs.
+   *
+   * @return array<int, array{text: string, url: string}>
+   *   Ordered segments; url is empty for plain text segments.
+   */
+  private function buildLinkSegments(string $text): array {
+    $parts = preg_split('~(https?://[^\s<>"]+)~i', $text, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY) ?: [$text];
+    $segments = [];
+    foreach ($parts as $part) {
+      $url = '';
+      $trailing = '';
+      if (preg_match('~^https?://~i', $part) === 1) {
+        // Keep sentence punctuation outside the link target.
+        $candidate = rtrim($part, '.,;:!?)');
+        $trailing = substr($part, strlen($candidate));
+        $url = $this->normalizeUri($candidate);
+        if ($url !== '') {
+          $part = $candidate;
+        }
+        else {
+          $trailing = '';
+        }
+      }
+      $segments[] = ['text' => $part, 'url' => $url];
+      if ($trailing !== '') {
+        $segments[] = ['text' => $trailing, 'url' => ''];
+      }
+    }
+    return $segments;
   }
 
   /**

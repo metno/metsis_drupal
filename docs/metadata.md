@@ -48,6 +48,15 @@ a usable URL remain plain text; valid URL-only entries use the translated label
 “Data center”. An entirely empty entry is omitted. Both templates use the
 [`data_center` component](../components/data_center).
 
+### License
+
+The summary **License** row shows `use_constraint_identifier`, linked to
+`use_constraint_resource` when that is a valid URL. When no identifier exists,
+the free-text `use_constraint_license_text` is shown instead (matching the
+search result rows); its HTTP(S) URLs are rendered as new-tab links from
+normalized text/URL segments rather than raw markup. Only when both are missing
+does the row show “Not provided”.
+
 ## 2. Export and vocabularies
 
 Metadata exports use MMD and XSLT-oriented transformations.
@@ -65,8 +74,9 @@ dataset pages directly from Solr, including metadata summaries, personnel cards,
 parent/child context, map previews, export, and visualisation controls.
 It provides a document-like presentation consistent with the search metadata UI.
 
-Normalized landing-page cache keys use `dataset:v2:` so entries cached before
-data-center support are rebuilt even when source timestamps have not changed.
+Normalized landing-page cache keys use `dataset:v3:` so entries cached before
+data-center support and the license-text fallback are rebuilt even when source
+timestamps have not changed.
 Existing dataset cache tags and timestamp-based refresh behavior are preserved.
 
 ## 4. NBS Extensions

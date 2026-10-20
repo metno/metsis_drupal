@@ -146,6 +146,30 @@ views.row.metsis_search_row:
     custom_style_name:
       type: string
       label: 'Custom row style machine name'
+    component_icon_width:
+      type: integer
+      label: 'Collection and license icon width'
+    doi_show_identifier:
+      type: boolean
+      label: 'Show DOI identifier'
+    doi_icon_size:
+      type: integer
+      label: 'DOI icon size'
+    doi_logo_color:
+      type: boolean
+      label: 'Use original DOI logo colors'
+    temporal_extent_short_notation:
+      type: boolean
+      label: 'Temporal extent short notation'
+    temporal_extent_compact_labels:
+      type: boolean
+      label: 'Temporal extent compact labels'
+    temporal_extent_add_icon:
+      type: boolean
+      label: 'Show temporal extent icon'
+    temporal_extent_icon_id:
+      type: string
+      label: 'Temporal extent icon ID'
     datacenter_name_fallback:
       type: string
       label: 'Datacenter Name Fallback'

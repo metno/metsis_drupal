@@ -14,10 +14,24 @@ JSON settings must be an object, with object-valued `features` and `mapOptions`
 when supplied. Empty results clear geometry. AJAX/HTMX replacement releases
 old map instances. Standalone WMS maps retain their 600px default.
 
-Feature-title tooltips wrap and stay inside their map container. Leaving the
-map, dragging, or resizing hides them without retaining an invisible layout
-box at old desktop coordinates. Dataset geometry and overlapping feature
-colors are unchanged; multiple globe-spanning features can fill the map.
+Feature-title tooltips list every overlapping result feature under the
+pointer (up to five titles, then "+N more"). They wrap and stay inside their
+map container. Leaving the map, dragging, or resizing hides them without
+retaining an invisible layout box at old desktop coordinates.
+
+Clicking result features opens a popup inside the map. Several features show a
+list; each entry (or a single feature directly) shows the title, a Collection
+badge for parents, the temporal extent in short notation, **Show in results**
+(scrolls to and highlights the row), **View metadata** (reuses the row's HTMX
+metadata dialog) and an HTTP(S) landing-page link when available. Escape, the
+close button, or a click on empty map closes it.
+
+Pins are black by default and blue when hovered or selected; while a popup is
+open, other features turn grey. Hovered/selected polygons are highlighted.
+Globe-spanning polygons (detected from the EPSG:4326 input) are nearly
+transparent so stacked world-covering results do not hide smaller polygons.
+GeoJSON features carry `solr_id`, `temporal_start`, `temporal_end` and
+`is_parent` properties for the popup.
 
 ## 2. Bounding-box filter
 

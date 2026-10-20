@@ -29,6 +29,10 @@ final class GeoJsonTransformerTest extends UnitTestCase {
     $item->method('getExtraData')->with('search_api_solr_document')->willReturn([
       'geometry_geojson' => '{"type":"Point","coordinates":[10,60]}',
       'title' => 'Custom result',
+      'id' => 'no-met-adc-dataset',
+      'temporal_extent_start_date' => ['2020-05-01T00:00:00Z', '2019-01-01T00:00:00Z'],
+      'temporal_extent_end_date' => ['2021-01-01T00:00:00Z'],
+      'isParent' => TRUE,
     ]);
     $item->method('getId')->willReturn('dataset');
     $results = $this->createMock(ResultSetInterface::class);
@@ -39,6 +43,12 @@ final class GeoJsonTransformerTest extends UnitTestCase {
     $collection = $view->element['#attached']['drupalSettings']['metsis_drupal']['search']['instances']['custom-view']['geojson_feature_collection'];
     self::assertSame('Custom result', $collection['features'][0]['properties']['title']);
     self::assertSame([10, 60], $collection['features'][0]['geometry']['coordinates']);
+    $properties = $collection['features'][0]['properties'];
+    self::assertSame('no-met-adc-dataset', $properties['solr_id']);
+    self::assertSame('2019-01-01T00:00:00Z', $properties['temporal_start']);
+    // Fewer end dates than start dates means the extent is open-ended.
+    self::assertSame('', $properties['temporal_end']);
+    self::assertTrue($properties['is_parent']);
     $empty = $this->createMock(ResultSetInterface::class);
     $empty->method('getQuery')->willReturn($query);
     $empty->method('getResultItems')->willReturn([]);

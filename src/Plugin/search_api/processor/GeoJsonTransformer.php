@@ -11,6 +11,7 @@ use Drupal\search_api\Item\ItemInterface;
 use Drupal\metsis_drupal\LoggerTrait;
 use Drupal\search_api\IndexInterface;
 use Drupal\metsis_drupal\MetsisConstants;
+use Drupal\metsis_drupal\Utility\MetsisSolrUtilities;
 
 /**
  * Process geojson field transformer query.
@@ -70,6 +71,13 @@ class GeoJsonTransformer extends ProcessorPluginBase {
           $landing_page = $this->getFirstFieldValue($result_item, $raw_fields, 'related_url_landing_page');
           $metadata_identifier = $this->getFirstFieldValue($result_item, $raw_fields, 'metadata_identifier');
           $wms_resources = $this->buildWmsResources($result_item, $raw_fields);
+          $solr_id = $this->getFirstFieldValue($result_item, $raw_fields, 'id');
+          if ($solr_id === '' && $metadata_identifier !== '') {
+            $solr_id = MetsisSolrUtilities::toSolrId($metadata_identifier);
+          }
+          [$temporal_start, $temporal_end] = $this->buildTemporalExtent($result_item, $raw_fields);
+          $is_parent = strtolower($this->getFirstFieldValue($result_item, $raw_fields, 'isParent'));
+          $is_parent = in_array($is_parent, ['1', 'true'], TRUE);
 
           // Add the GeoJSON string as a Feature in the FeatureCollection.
           $features[] = [
@@ -85,6 +93,10 @@ class GeoJsonTransformer extends ProcessorPluginBase {
               'landing_page' => $landing_page,
               'wms_resources' => $wms_resources,
               'has_wms' => !empty($wms_resources),
+              'solr_id' => $solr_id,
+              'temporal_start' => $temporal_start,
+              'temporal_end' => $temporal_end,
+              'is_parent' => $is_parent,
             ],
           ];
         }
@@ -176,6 +188,27 @@ class GeoJsonTransformer extends ProcessorPluginBase {
   protected function getFirstFieldValue(ItemInterface $result_item, array $raw_fields, string $field_name): string {
     $values = $this->getFieldValues($result_item, $raw_fields, $field_name);
     return $values[0] ?? '';
+  }
+
+  /**
+   * Return the earliest start and latest end date of a result.
+   *
+   * Mirrors the search row: the end is empty when open-ended (fewer end dates
+   * than start dates).
+   *
+   * @return array{0: string, 1: string}
+   *   Start and end dates.
+   */
+  protected function buildTemporalExtent(ItemInterface $result_item, array $raw_fields): array {
+    $starts = $this->getFieldValues($result_item, $raw_fields, 'temporal_extent_start_date');
+    $ends = $this->getFieldValues($result_item, $raw_fields, 'temporal_extent_end_date');
+    if ($starts === []) {
+      return ['', ''];
+    }
+    sort($starts);
+    sort($ends);
+    $end = ($ends !== [] && count($starts) <= count($ends)) ? (string) end($ends) : '';
+    return [$starts[0], $end];
   }
 
   /**

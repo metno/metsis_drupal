@@ -1,4 +1,10 @@
 import { useEffect } from "preact/hooks";
+import {
+  getResultFeaturesAtPixel,
+  setFeatureState,
+  summarizeTitles,
+  t,
+} from "@utils/featureInfo.js";
 
 const TooltipHover = ({ mapInstance }) => {
   useEffect(() => {
@@ -26,23 +32,52 @@ const TooltipHover = ({ mapInstance }) => {
 
     const hideTooltip = () => {
       tooltipElement.style.display = "none";
-      tooltipElement.textContent = "";
+      tooltipElement.replaceChildren();
+      setFeatureState(mapInstance, "hovered", []);
     };
 
-    // Function to display feature information
+    // Show the titles of all (overlapping) result features under the pointer.
     const displayFeatureInfo = (pixel, target) => {
-      // Check if the target is a control (like zoom buttons) and ignore
-      const feature = target.closest(".ol-control")
-        ? undefined
-        : mapInstance.forEachFeatureAtPixel(pixel, (feature) => feature);
+      // Ignore controls (like zoom buttons) and overlays such as the popup.
+      const features = target.closest(".ol-control, .ol-overlay-container")
+        ? []
+        : getResultFeaturesAtPixel(mapInstance, pixel);
+      const { visible, remaining } = summarizeTitles(
+        features.map((feature) => feature.get("title")),
+      );
 
-      const title = feature?.get("title");
-      if (!title) {
-        hideTooltip();
+      setFeatureState(
+        mapInstance,
+        "hovered",
+        features.map((feature) => feature.get("id")),
+      );
+      mapContainer.style.cursor = features.length ? "pointer" : "";
+
+      if (!visible.length) {
+        tooltipElement.style.display = "none";
+        tooltipElement.replaceChildren();
         return;
       }
 
-      tooltipElement.textContent = title;
+      const lines = visible.map((title) => {
+        const line = document.createElement("div");
+        line.textContent = title;
+        return line;
+      });
+      if (lines.length > 1) {
+        lines.forEach((line) => {
+          line.style.paddingLeft = "0.75em";
+          line.style.textIndent = "-0.75em";
+          line.textContent = `\u2022 ${line.textContent}`;
+        });
+      }
+      if (remaining > 0) {
+        const more = document.createElement("div");
+        more.style.fontStyle = "italic";
+        more.textContent = t("+@count more", { "@count": remaining });
+        lines.push(more);
+      }
+      tooltipElement.replaceChildren(...lines);
       tooltipElement.style.display = "block";
       tooltipElement.style.left = `${Math.max(0, Math.min(pixel[0], mapContainer.clientWidth - tooltipElement.offsetWidth))}px`;
       tooltipElement.style.top = `${Math.max(0, Math.min(pixel[1], mapContainer.clientHeight - tooltipElement.offsetHeight))}px`;
@@ -58,11 +93,11 @@ const TooltipHover = ({ mapInstance }) => {
     };
     mapInstance.on("pointermove", onPointerMove);
 
-    // Add click event listener to display feature info
-    const onClick = (evt) => {
-      displayFeatureInfo(evt.pixel, evt.originalEvent.target);
+    // Clicks open the feature popup, which replaces the tooltip.
+    const onClick = () => {
+      tooltipElement.style.display = "none";
     };
-    mapInstance.on("click", onClick);
+    mapInstance.on("singleclick", onClick);
 
     // Hide tooltip when the mouse leaves the map
     mapContainer.addEventListener("pointerleave", hideTooltip);
@@ -74,7 +109,8 @@ const TooltipHover = ({ mapInstance }) => {
       mapContainer.removeEventListener("pointerleave", hideTooltip);
       mapInstance.un("change:size", hideTooltip);
       mapInstance.un("pointermove", onPointerMove);
-      mapInstance.un("click", onClick);
+      mapInstance.un("singleclick", onClick);
+      mapContainer.style.cursor = "";
     };
   }, [mapInstance]);
 

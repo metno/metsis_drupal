@@ -112,4 +112,50 @@ final class MetsisSearchRowTest extends TestCase {
     );
   }
 
+  /**
+   * Tests nested component settings are flattened into the saved options.
+   */
+  #[Test]
+  public function testSubmitOptionsFormFlattensComponentSettings(): void {
+    $row = (new \ReflectionClass(MetsisSearchRow::class))->newInstanceWithoutConstructor();
+    $row->options = ['show_operations' => TRUE, 'style' => 'default'];
+    $form = ['#parents' => ['row_options']];
+    $state = (new FormState())->setValues([
+      'row_options' => [
+        'show_operations' => '1',
+        'style' => 'nbs',
+        'custom_style_name' => '',
+        'component_settings' => [
+          'shared_icons' => ['component_icon_width' => '4'],
+          'doi_component' => [
+            'doi_show_identifier' => '1',
+            'doi_icon_size' => '32',
+            'doi_logo_color' => '0',
+          ],
+          'temporal_extent_component' => [
+            'temporal_extent_short_notation' => '1',
+            'temporal_extent_compact_labels' => '0',
+            'temporal_extent_add_icon' => '0',
+            'temporal_extent_icon_id' => ' ',
+          ],
+        ],
+      ],
+    ]);
+    $row->submitOptionsForm($form, $state);
+    $saved = $state->getValue('row_options');
+
+    self::assertArrayNotHasKey('component_settings', $saved);
+    self::assertSame('nbs', $saved['style']);
+    self::assertSame(16, $saved['component_icon_width']);
+    self::assertTrue($saved['doi_show_identifier']);
+    self::assertSame(32, $saved['doi_icon_size']);
+    self::assertFalse($saved['doi_logo_color']);
+    self::assertTrue($saved['temporal_extent_short_notation']);
+    self::assertFalse($saved['temporal_extent_compact_labels']);
+    self::assertFalse($saved['temporal_extent_add_icon']);
+    self::assertSame('date-time', $saved['temporal_extent_icon_id']);
+    // The flattened values are also merged into the plugin options.
+    self::assertSame($saved, array_intersect_key($row->options, $saved));
+  }
+
 }

@@ -284,23 +284,32 @@ class MetsisSearchRow extends SearchApiRow implements ContainerFactoryPluginInte
    * {@inheritdoc}
    */
   public function submitOptionsForm(&$form, FormStateInterface $form_state) {
-    $this->options['show_operations'] = $form_state->getValue('show_operations');
-    $this->options['style'] = $form_state->getValue('style');
-    $this->options['custom_style_name'] = (string) $form_state->getValue('custom_style_name', '');
-    $component_settings = (array) $form_state->getValue('component_settings', []);
+    // Views stores the submitted 'row_options' values, so the nested fieldset
+    // values must be flattened there rather than only into $this->options.
+    $parents = $form['#parents'] ?? ['row_options'];
+    $values = (array) $form_state->getValue($parents, []);
+    $component_settings = (array) ($values['component_settings'] ?? []);
     $shared_icons = (array) ($component_settings['shared_icons'] ?? []);
     $doi_component = (array) ($component_settings['doi_component'] ?? []);
     $temporal_component = (array) ($component_settings['temporal_extent_component'] ?? []);
+    $icon_id = trim((string) ($temporal_component['temporal_extent_icon_id'] ?? 'date-time'));
 
-    $this->options['component_icon_width'] = max(16, (int) ($shared_icons['component_icon_width'] ?? $form_state->getValue('component_icon_width') ?? 88));
-    $this->options['doi_show_identifier'] = !empty($doi_component['doi_show_identifier'] ?? $form_state->getValue('doi_show_identifier'));
-    $this->options['doi_icon_size'] = max(12, (int) ($doi_component['doi_icon_size'] ?? $form_state->getValue('doi_icon_size') ?? 24));
-    $this->options['doi_logo_color'] = !empty($doi_component['doi_logo_color'] ?? $form_state->getValue('doi_logo_color'));
-    $this->options['temporal_extent_short_notation'] = !empty($temporal_component['temporal_extent_short_notation'] ?? $form_state->getValue('temporal_extent_short_notation'));
-    $this->options['temporal_extent_compact_labels'] = !empty($temporal_component['temporal_extent_compact_labels'] ?? $form_state->getValue('temporal_extent_compact_labels'));
-    $this->options['temporal_extent_add_icon'] = !empty($temporal_component['temporal_extent_add_icon'] ?? $form_state->getValue('temporal_extent_add_icon'));
-    $icon_id = trim((string) ($temporal_component['temporal_extent_icon_id'] ?? $form_state->getValue('temporal_extent_icon_id') ?? 'date-time'));
-    $this->options['temporal_extent_icon_id'] = $icon_id !== '' ? $icon_id : 'date-time';
+    $component_options = [
+      'component_icon_width' => max(16, (int) ($shared_icons['component_icon_width'] ?? 88)),
+      'doi_show_identifier' => !empty($doi_component['doi_show_identifier']),
+      'doi_icon_size' => max(12, (int) ($doi_component['doi_icon_size'] ?? 24)),
+      'doi_logo_color' => !empty($doi_component['doi_logo_color']),
+      'temporal_extent_short_notation' => !empty($temporal_component['temporal_extent_short_notation']),
+      'temporal_extent_compact_labels' => !empty($temporal_component['temporal_extent_compact_labels']),
+      'temporal_extent_add_icon' => !empty($temporal_component['temporal_extent_add_icon']),
+      'temporal_extent_icon_id' => $icon_id !== '' ? $icon_id : 'date-time',
+    ];
+    unset($values['component_settings']);
+    $values = $component_options + $values;
+    $form_state->setValue($parents, $values);
+
+    $this->options = $values + $this->options;
+    $this->options['custom_style_name'] = (string) ($values['custom_style_name'] ?? '');
     parent::submitOptionsForm($form, $form_state);
   }
 

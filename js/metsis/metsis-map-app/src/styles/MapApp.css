@@ -200,3 +200,128 @@
 .metsis-wms-resource-toggle:hover {
   background: #ddeaf7;
 }
+
+/* Result feature popup (see FeaturePopup.jsx). */
+.metsis-feature-popup__inner {
+  position: relative;
+  box-sizing: border-box;
+  width: min(22rem, var(--metsis-feature-popup-max-width, 80vw));
+  max-height: min(18rem, var(--metsis-feature-popup-max-height, 18rem));
+  overflow-y: auto;
+  padding: 0.75rem 2rem 0.75rem 0.75rem;
+  background: #fff;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.metsis-feature-popup__close {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  padding: 0 0.4rem;
+  border: 0;
+  background: transparent;
+  font-size: 1.25rem;
+  line-height: 1.25;
+  cursor: pointer;
+}
+
+.metsis-feature-popup__heading,
+.metsis-feature-popup__title {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.metsis-feature-popup__list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.metsis-feature-popup__list button,
+.metsis-feature-popup__back {
+  width: 100%;
+  padding: 0.35rem 0.4rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.metsis-feature-popup__list li + li {
+  border-top: 1px solid #e5e7eb;
+}
+
+.metsis-feature-popup__list button:hover,
+.metsis-feature-popup__list button:focus-visible,
+.metsis-feature-popup__back:hover,
+.metsis-feature-popup__back:focus-visible {
+  background: #eff6ff;
+  color: #0b5cad;
+}
+
+.metsis-feature-popup__back {
+  width: auto;
+  margin-bottom: 0.25rem;
+  padding-left: 0;
+}
+
+.metsis-feature-popup__badge {
+  display: inline-block;
+  margin: 0 0 0.4rem 0.4rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: #e0e7ff;
+  color: #3730a3;
+  font-size: 0.75rem;
+}
+
+.metsis-feature-popup__detail .metsis-feature-popup__badge {
+  margin-left: 0;
+}
+
+.metsis-feature-popup__temporal {
+  margin: 0 0 0.5rem;
+}
+
+.metsis-feature-popup__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.metsis-feature-popup__action {
+  display: inline-block;
+  margin: 0;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid #0b5cad;
+  border-radius: 4px;
+  background: #fff;
+  color: #0b5cad;
+  font: inherit;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.metsis-feature-popup__action:hover,
+.metsis-feature-popup__action:focus-visible {
+  background: #0b5cad;
+  color: #fff;
+}
+
+.metsis-search-row--map-highlight {
+  outline: 3px solid #0078ff;
+  outline-offset: 4px;
+  transition: outline-color 0.3s ease;
+}

@@ -45,6 +45,13 @@ Choose **Custom** row style and supply a machine name for
 hyphens in the filename. Missing overrides and legacy Detailed/Custom styles
 fall back to Default. See [template organization](architecture.md#3-templates-and-components).
 
+The row's **Component settings** control the rendered SDC components:
+shared license/collection icon width (minimum 16px), DOI identifier, icon size
+and logo color, and temporal extent short (`start to end`) or long notation,
+compact labels, date icon and icon ID. Views stores these as flat row options
+(for example `temporal_extent_short_notation`); the nested form fieldsets are
+flattened on submit.
+
 ## 3. Exposed-form block
 
 The **METSIS search exposed form** block renders filters from the

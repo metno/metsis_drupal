@@ -8,6 +8,7 @@ import GeoJSONLayer from "@components/GeoJSONLayer.jsx";
 import ProjectionSwitcher from "@components/ProjectionSwitcher.jsx";
 import LayerSwitcher from "@components/LayerSwitcher.jsx";
 import TooltipHover from "@components/TooltipHover";
+import FeaturePopup from "@components/FeaturePopup.jsx";
 import WMSResourcesOverlayControl from "@components/WMSResourcesOverlayControl.jsx";
 import LegendPanel from "@components/LegendPanel.jsx";
 
@@ -144,6 +145,13 @@ const MapApp = ({ config }) => {
             )}
             {config.features.geojson && olMap && (
               <TooltipHover mapInstance={olMap} />
+            )}
+            {config.features.geojson && olMap && (
+              <FeaturePopup
+                mapInstance={olMap}
+                geojsonFeatures={geojsonResultData}
+                projection={projection}
+              />
             )}
           </MapContainer>
         </div>

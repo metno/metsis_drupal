@@ -22,6 +22,8 @@
 	<span class="metsis-metadata__vocab-value">
 		{% if value.resource_url is not empty %}
 			<a href="{{ value.resource_url }}" target="_blank" rel="noopener noreferrer">{{ value.text }}</a>
+		{% elseif value.segments is defined and value.segments is not empty %}
+			<span>{% for segment in value.segments %}{% if segment.url is not empty %}<a href="{{ segment.url }}" target="_blank" rel="noopener noreferrer">{{ segment.text }}</a>{% else %}{{ segment.text }}{% endif %}{% endfor %}</span>
 		{% else %}
 			<span>{{ value.text }}</span>
 		{% endif %}

@@ -322,6 +322,7 @@ final class MetadataDocumentNormalizerTest extends TestCase {
     $this->assertSame('https://vocab.met.no/mmd/Access_Constraint/Open', $summary['Access constraint']['vocabulary']['uri']);
     $this->assertSame('CC-BY-4.0', $summary['License']['text']);
     $this->assertSame('https://creativecommons.org/licenses/by/4.0/', $summary['License']['resource_url']);
+    $this->assertSame([], $summary['License']['segments']);
     $this->assertNull($summary['License']['vocabulary']);
 
     $this->assertSame('NMAP, YOPP', $summary['Collection']['text']);
@@ -541,6 +542,37 @@ final class MetadataDocumentNormalizerTest extends TestCase {
       'see_also' => [],
       'broader' => [],
     ];
+  }
+
+  /**
+   * Tests the License summary falls back to free-text license segments.
+   */
+  #[Test]
+  public function buildSummaryFallsBackToLicenseText(): void {
+    $this->metVocabService->method('lookupByLabel')->willReturn(NULL);
+    $this->metVocabService->method('lookupByUri')->willReturn(NULL);
+
+    $license = $this->normalizer->buildSummary([
+      'use_constraint_license_text' => 'Covered by the Legal notice at https://example.test/notice.pdf.',
+    ])['License'];
+    $this->assertSame('Covered by the Legal notice at https://example.test/notice.pdf.', $license['text']);
+    $this->assertSame('', $license['resource_url']);
+    $this->assertSame([
+      ['text' => 'Covered by the Legal notice at ', 'url' => ''],
+      ['text' => 'https://example.test/notice.pdf', 'url' => 'https://example.test/notice.pdf'],
+      ['text' => '.', 'url' => ''],
+    ], $license['segments']);
+
+    $license = $this->normalizer->buildSummary([
+      'use_constraint_identifier' => 'CC-BY-4.0',
+      'use_constraint_license_text' => 'Ignored when an identifier exists.',
+    ])['License'];
+    $this->assertSame('CC-BY-4.0', $license['text']);
+    $this->assertSame([], $license['segments']);
+
+    $license = $this->normalizer->buildSummary([])['License'];
+    $this->assertSame('Not provided', $license['text']);
+    $this->assertSame([], $license['segments']);
   }
 
 }

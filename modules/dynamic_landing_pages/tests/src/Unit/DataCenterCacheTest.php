@@ -115,7 +115,7 @@ final class DataCenterCacheTest extends UnitTestCase {
     self::assertSame($first['#sections'], $second['#sections']);
     self::assertSame('data_center', $first['#sections'][0]['field']);
     self::assertSame('METNO', $first['#sections'][0]['value']['short_name']);
-    $cached = $cache->get('dataset:v2:no.met.adc:example');
+    $cached = $cache->get('dataset:v3:no.met.adc:example');
     self::assertNotFalse($cached);
     self::assertSame($first['#sections'], $cached->data['sections']);
     self::assertSame(['dynamic_landing_pages:dataset:no.met.adc:example'], $cached->tags);
