@@ -64,6 +64,11 @@ Metadata details and dynamic landing pages share an accessible
 [Data center section](docs/metadata.md#data-center) with name fallbacks and
 optional short-name subtext.
 
+The shared [search layout](docs/search-and-views.md#2-layout-and-templates)
+adapts to the theme's available content width. Result cards and temporal
+controls reflow within narrow columns, retaining usable mobile abstracts
+and collection actions.
+
 ## 5. Development and testing
 
 See [development and CI](docs/development/README.md) for DDEV commands, builds,

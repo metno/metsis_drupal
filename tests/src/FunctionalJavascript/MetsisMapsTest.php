@@ -70,16 +70,18 @@ final class MetsisMapsTest extends WebDriverTestBase {
     $view = View::load('metsis_search');
     $displays = $view->get('display');
     $options = &$displays['default']['display_options'];
-    // Keep the actual bbox plugin but remove unrelated result-backed facets.
+    // Keep search/spatial/temporal controls, not result-backed facets.
+    $filter_plugins = ['search_api_fulltext', 'metsis_filter_bbox', 'metsis_filter_date_range'];
     foreach ($options['filters'] as $id => $filter) {
-      if (($filter['plugin_id'] ?? '') !== 'metsis_filter_bbox') {
+      if (!in_array($filter['plugin_id'] ?? '', $filter_plugins, TRUE)) {
         unset($options['filters'][$id]);
       }
-      else {
+      elseif ($filter['plugin_id'] === 'metsis_filter_bbox') {
         $options['filters'][$id]['expose']['map_height'] = 250;
       }
     }
     $options['header'] = [
+      'views_filters_summary' => $options['header']['views_filters_summary'],
       'metsis_map' => [
         'id' => 'metsis_map',
         'table' => 'views',
@@ -125,6 +127,54 @@ final class MetsisMapsTest extends WebDriverTestBase {
     self::assertCount(2, $this->getSession()->getPage()->findAll('css', '.bbox-map-filter-container'));
     $this->assertMap('#block-map-filter-block .bbox-map-filter-container', 250);
     $this->assertMap('.metsis-filters .bbox-map-filter-container', 250);
+  }
+
+  /**
+   * Tests actual result markup in narrow theme containers and mobile viewports.
+   */
+  public function testResponsiveRows(): void {
+    $this->container->get('state')->set('metsis_map_test.responsive_rows', TRUE);
+    $this->container->get('theme_installer')->install(['olivero', 'claro']);
+    foreach (['stark', 'olivero', 'claro'] as $theme) {
+      $this->config('system.theme')->set('default', $theme)->save();
+      $this->getSession()->resizeWindow(1440, 1000);
+      $this->drupalGet('metsis/search', ['query' => ['text' => str_repeat('UnbrokenSearch', 5)]]);
+      $this->assertSession()->elementExists('css', 'section.metsis-search-main-content[aria-label="Search results"]');
+      $this->assertSession()->elementsCount('css', '.metsis-search-row', 2);
+      $this->assertSession()->elementTextContains('css', '.views-filters-summary', str_repeat('UnbrokenSearch', 5));
+      $this->assertMap('.metsis-search-map .map-container', 400);
+      foreach ([1440, 1024, 820, 769, 768, 390, 320] as $width) {
+        $this->getSession()->resizeWindow($width, 1000);
+        // Hidden tooltips must not contribute stale desktop coordinates.
+        $this->getSession()->executeScript('document.querySelectorAll(".metsis-map-tooltip").forEach(e => e.style.left = "2000px");');
+        $fits = $this->getSession()->wait(5000, <<<'JS'
+          (function () {
+            const results = document.querySelector(".metsis-search-main-content");
+            const search = document.querySelector(".metsis-search-text__input").getBoundingClientRect();
+            const button = document.querySelector(".metsis-search-box__button").getBoundingClientRect();
+            return document.documentElement.scrollWidth <= innerWidth + 1
+              && results.scrollWidth <= results.clientWidth + 1
+              && button.top >= search.top && button.bottom <= search.bottom
+              && Array.from(document.querySelectorAll(".metsis-abstract-wrapper")).every(e => e.getBoundingClientRect().width > 100)
+              && Array.from(document.querySelectorAll(".metsis-filters input[type=date]")).every(e => {
+                const fieldset = e.closest("fieldset").getBoundingClientRect();
+                const input = e.getBoundingClientRect();
+                return input.width > 0 && input.left >= fieldset.left && input.right <= fieldset.right;
+              });
+          })()
+          JS);
+        self::assertTrue($fits, "$theme at $width px must fit the viewport and retain usable abstracts.");
+        if ($width <= 820) {
+          $stacked = $this->getSession()->evaluateScript('document.querySelector(".metsis-search-main-content").getBoundingClientRect().top >= document.querySelector(".metsis-filters").getBoundingClientRect().bottom');
+          self::assertTrue($stacked, "$theme at $width px must stack results below filters.");
+        }
+      }
+      $this->getSession()->getPage()->find('css', '.metsis-abstract-toggle')->click();
+      $this->assertSession()->elementAttributeContains('css', '.metsis-abstract-toggle', 'aria-expanded', 'true');
+      $this->getSession()->getPage()->find('css', '.metsis-abstract-toggle')->click();
+      $this->assertSession()->elementAttributeContains('css', '.metsis-abstract-toggle', 'aria-expanded', 'false');
+      $this->assertMap('.bbox-map-filter-container', 250);
+    }
   }
 
   /**

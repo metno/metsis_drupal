@@ -7,13 +7,16 @@ const TooltipHover = ({ mapInstance }) => {
     const tooltipElement = document.createElement("div");
     tooltipElement.className = "metsis-map-tooltip ol-control";
     tooltipElement.style.position = "absolute";
-    tooltipElement.style.visibility = "hidden";
+    tooltipElement.style.display = "none";
     tooltipElement.style.pointerEvents = "none";
     tooltipElement.style.background = "rgba(0, 0, 0, 0.7)";
     tooltipElement.style.color = "#fff";
     tooltipElement.style.padding = "4px 8px";
     tooltipElement.style.borderRadius = "4px";
-    tooltipElement.style.whiteSpace = "nowrap";
+    tooltipElement.style.whiteSpace = "normal";
+    tooltipElement.style.overflowWrap = "anywhere";
+    tooltipElement.style.boxSizing = "border-box";
+    tooltipElement.style.maxWidth = "100%";
     tooltipElement.style.fontSize = "12px";
     tooltipElement.style.zIndex = "1000";
 
@@ -21,7 +24,10 @@ const TooltipHover = ({ mapInstance }) => {
     const mapContainer = mapInstance.getTargetElement();
     mapContainer.appendChild(tooltipElement);
 
-    let currentFeature;
+    const hideTooltip = () => {
+      tooltipElement.style.display = "none";
+      tooltipElement.textContent = "";
+    };
 
     // Function to display feature information
     const displayFeatureInfo = (pixel, target) => {
@@ -30,29 +36,22 @@ const TooltipHover = ({ mapInstance }) => {
         ? undefined
         : mapInstance.forEachFeatureAtPixel(pixel, (feature) => feature);
 
-      if (feature) {
-        const title = feature.get("title"); // Get the 'title' property
-        if (title) {
-          tooltipElement.style.left = pixel[0] + "px";
-          tooltipElement.style.top = pixel[1] + "px";
-          if (feature !== currentFeature) {
-            tooltipElement.style.visibility = "visible";
-            tooltipElement.innerText = title;
-          }
-        }
-      } else {
-        tooltipElement.style.visibility = "hidden";
-        tooltipElement.innerText = "";
+      const title = feature?.get("title");
+      if (!title) {
+        hideTooltip();
+        return;
       }
-      currentFeature = feature;
+
+      tooltipElement.textContent = title;
+      tooltipElement.style.display = "block";
+      tooltipElement.style.left = `${Math.max(0, Math.min(pixel[0], mapContainer.clientWidth - tooltipElement.offsetWidth))}px`;
+      tooltipElement.style.top = `${Math.max(0, Math.min(pixel[1], mapContainer.clientHeight - tooltipElement.offsetHeight))}px`;
     };
 
     // Add pointermove event listener to the map
     const onPointerMove = (evt) => {
       if (evt.dragging) {
-        tooltipElement.style.visibility = "hidden";
-        tooltipElement.innerText = "";
-        currentFeature = undefined;
+        hideTooltip();
         return;
       }
       displayFeatureInfo(evt.pixel, evt.originalEvent.target);
@@ -66,17 +65,14 @@ const TooltipHover = ({ mapInstance }) => {
     mapInstance.on("click", onClick);
 
     // Hide tooltip when the mouse leaves the map
-    const onPointerLeave = () => {
-      currentFeature = undefined;
-      tooltipElement.style.visibility = "hidden";
-      tooltipElement.innerText = "";
-    };
-    mapContainer.addEventListener("pointerleave", onPointerLeave);
+    mapContainer.addEventListener("pointerleave", hideTooltip);
+    mapInstance.on("change:size", hideTooltip);
 
     // Cleanup on component unmount
     return () => {
       tooltipElement.remove();
-      mapContainer.removeEventListener("pointerleave", onPointerLeave);
+      mapContainer.removeEventListener("pointerleave", hideTooltip);
+      mapInstance.un("change:size", hideTooltip);
       mapInstance.un("pointermove", onPointerMove);
       mapInstance.un("click", onClick);
     };

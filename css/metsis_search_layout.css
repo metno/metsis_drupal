@@ -1,32 +1,29 @@
 .metsis-search-layout {
-  display: grid;
-  grid-template-columns: minmax(0, var(--metsis-sidebar-width, 24rem)) minmax(
-      0,
-      1fr
-    );
-  grid-template-rows: auto auto;
+  display: flex;
+  flex-wrap: wrap;
   gap: 20px;
   padding: 20px;
 }
 
 .metsis-messages-container {
-  grid-column: 1 / -1;
+  flex-basis: 100%;
   max-width: 100%;
 }
 
 .metsis-search-layout .metsis-filters {
+  box-sizing: border-box;
+  flex: 1 1 var(--metsis-sidebar-width, 24rem);
   min-width: 0;
-  grid-column: 1;
-  grid-row: 2;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 5px;
 }
 
 .metsis-search-layout .metsis-search-main-content {
+  box-sizing: border-box;
+  /* Preserve the sidebar width when adjacent; fill each row when wrapped. */
+  flex: 999 1 26rem;
   min-width: 0;
-  grid-column: 2;
-  grid-row: 2;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 5px;
@@ -38,8 +35,7 @@
 }
 
 .metsis-search-layout .metsis-search-box {
-  grid-column: 1 / -1;
-  /* Span both columns */
+  flex-basis: 100%;
   max-width: 100%;
 
   padding: 10px;
@@ -134,12 +130,36 @@
   border-bottom: 1px dashed #ddd;
 }
 .metsis-search-layout .views-filters-summary .items {
-  display: unset;
+  display: block;
 }
 .metsis-search-layout .views-filters-summary .item {
   margin-bottom: 0.5rem;
   /* border: 1px solid #ddd;
   border-radius: 5px; */
+}
+
+.metsis-search-layout .views-filters-summary .value-container {
+  display: inline-block;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.metsis-search-layout .views-filters-summary a.remove-filter {
+  display: inline-flex;
+  box-sizing: border-box;
+  max-width: 100%;
+  margin-left: 0;
+  gap: 0.25rem;
+  white-space: normal;
+}
+
+.metsis-search-layout .views-filters-summary .remove-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.metsis-search-layout .views-filters-summary .remove-button {
+  flex-shrink: 0;
 }
 
 .metsis-search-layout .views-filters-summary .item span.label {
@@ -152,6 +172,8 @@
 }
 
 .metsis-search-layout .metsis-search-fieldset {
+  box-sizing: border-box;
+  min-width: 0;
   width: 100%;
   margin: 0 0 1rem;
   border: 1px solid #d8e0e8;
@@ -172,6 +194,7 @@
 }
 
 .metsis-search-layout .metsis-search-fieldset__header {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -246,17 +269,20 @@
   margin: 0.15em 0 0.15em;
 }
 
-#page-wrapper .metsis-search-layout .metsis-date-range-fields {
+#page-wrapper .metsis-search-layout .metsis-date-range-fields,
+.metsis-search-layout .metsis-date-range-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
   gap: 0.85rem;
+  min-width: 0;
   margin: 0 auto;
   width: calc(100% - 1.5rem);
   max-width: 30.5rem;
 }
 
-#page-wrapper .metsis-search-layout .metsis-date-range-field {
+#page-wrapper .metsis-search-layout .metsis-date-range-field,
+.metsis-search-layout .metsis-date-range-field {
   box-sizing: border-box;
   flex: initial;
   min-width: 0;
@@ -265,17 +291,16 @@
   padding: 0;
 }
 
-#page-wrapper .metsis-search-layout .metsis-date-range-field label {
+#page-wrapper .metsis-search-layout .metsis-date-range-field label,
+.metsis-search-layout .metsis-date-range-field label {
   display: block;
   box-sizing: border-box;
   width: 100%;
   margin: 0 0 0.35rem;
 }
 
-#page-wrapper
-  .metsis-search-layout
-  .metsis-date-range-field
-  input[type="date"] {
+#page-wrapper .metsis-search-layout .metsis-date-range-field input[type="date"],
+.metsis-search-layout .metsis-date-range-field input[type="date"] {
   box-sizing: border-box;
   display: block;
   width: 100%;
@@ -290,32 +315,38 @@
 }
 
 @media (max-width: 560px) {
-  #page-wrapper .metsis-search-layout .metsis-date-range-fields {
+  #page-wrapper .metsis-search-layout .metsis-date-range-fields,
+  .metsis-search-layout .metsis-date-range-fields {
     grid-template-columns: minmax(0, 1fr);
     width: calc(100% - 1.5rem);
   }
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .metsis-search-layout {
-    grid-template-columns: 1fr;
-    /* Single column layout */
-    grid-template-rows: auto auto auto;
-    /* Add an extra row for filters */
-  }
+.metsis-search-layout .metsis-filters {
+  container: metsis-filters / inline-size;
+  overflow-wrap: anywhere;
+}
 
-  .metsis-search-layout .metsis-filters {
-    grid-column: 1;
-    /* Full width */
-    grid-row: 2;
-    /* Move below messages */
-  }
+.metsis-search-layout .metsis-filters :is(input, select, .form-item) {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
 
-  .metsis-search-layout .metsis-search-main-content {
-    grid-column: 1;
-    /* Full width */
-    grid-row: 3;
-    /* Move below filters */
+.metsis-search-layout .metsis-search-map :is(label, select) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+@container metsis-filters (max-width: 22rem) {
+  #page-wrapper .metsis-search-layout .metsis-date-range-fields,
+  .metsis-search-layout .metsis-date-range-fields {
+    grid-template-columns: minmax(0, 1fr);
   }
+}
+
+#page-wrapper .metsis-search-layout .metsis-date-range-operator,
+.metsis-search-layout .metsis-date-range-operator {
+  min-width: 0;
 }

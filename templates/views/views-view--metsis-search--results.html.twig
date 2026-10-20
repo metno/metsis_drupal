@@ -74,7 +74,7 @@
   {# end left aside column #}
 
 	{# Main content to the right of the left aside column #}
-	<main id="metsis-results-header-wrapper-{{ dom_id }}" class="metsis-search-main-content">
+  <section id="metsis-results-header-wrapper-{{ dom_id }}" class="metsis-search-main-content" aria-label="{{ 'Search results'|t }}">
 		{# Active filters summary #}
     <div id="results-header-replace-wrapper-{{ dom_id }}">
     {% if header.views_filters_summary and header.views_filters_summary['#markup'] is not empty %}
@@ -136,7 +136,7 @@
       {{ feed_icons }}
     </div>
     {# end pager, results and footer wrapper #}
-  </main>
+  </section>
   {# end main content to the right of the left aside column #}
 </div>
 {# End view main div #}

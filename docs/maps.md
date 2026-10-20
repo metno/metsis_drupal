@@ -14,6 +14,11 @@ JSON settings must be an object, with object-valued `features` and `mapOptions`
 when supplied. Empty results clear geometry. AJAX/HTMX replacement releases
 old map instances. Standalone WMS maps retain their 600px default.
 
+Feature-title tooltips wrap and stay inside their map container. Leaving the
+map, dragging, or resizing hides them without retaining an invisible layout
+box at old desktop coordinates. Dataset geometry and overlapping feature
+colors are unchanged; multiple globe-spanning features can fill the map.
+
 ## 2. Bounding-box filter
 
 Configure map/coordinate input and tabs in the bbox Views filter.
@@ -43,6 +48,9 @@ and do not replace the primary search map.
 
 [`MetsisMapsTest.php`](../tests/src/FunctionalJavascript/MetsisMapsTest.php)
 checks rendered canvases/heights, bbox tab switching, AJAX replacement, and
-simultaneous View/block maps against an isolated backend.
+simultaneous View/block maps against an isolated backend. Its responsive
+scenario checks real default-row markup, search-button alignment, date-field
+bounds, mobile abstract expansion, and hidden-tooltip overflow across Stark,
+Olivero, and Claro at 1440, 1024, 820, 769, 768, 390, and 320px.
 See [browser testing](development/README.md#4-browser-tests-and-ci) for
 WebDriver prerequisites and CI diagnostics.

@@ -1,0 +1,67 @@
+<?php
+
+/**
+ * @file
+ * Deterministic result rows for responsive browser tests.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Url;
+use Drupal\views\ViewExecutable;
+
+/**
+ * Implements hook_views_pre_render().
+ */
+function metsis_map_test_views_pre_render(ViewExecutable $view): void {
+  if ($view->id() !== 'metsis_search' || !\Drupal::state()->get('metsis_map_test.responsive_rows')) {
+    return;
+  }
+
+  foreach (['with-map', 'without-map'] as $variant) {
+    $fields = [
+      'id' => 'responsive-' . $variant,
+      'metadata_identifier' => 'responsive-' . $variant,
+      'title' => str_repeat('DatasetTitle', 12),
+      'abstract' => ['#markup' => str_repeat('<p>A long abstract for testing responsive search result expansion and wrapping.</p>', 30)],
+      'parent' => TRUE,
+      'license_text' => [
+        '#type' => 'link',
+        '#title' => 'https://example.test/' . str_repeat('license', 30),
+        '#url' => Url::fromUri('https://example.test/license'),
+      ],
+    ];
+    if ($variant === 'with-map') {
+      $fields['thumbnail'] = [
+        '#theme' => 'image',
+        '#uri' => 'core/misc/druplicon.png',
+        '#alt' => 'Dataset thumbnail',
+        '#width' => 180,
+        '#height' => 180,
+      ];
+    }
+    $view->attachment_after[] = [
+      '#theme' => 'metsis_search_row_default',
+      '#fields' => $fields,
+      '#operations' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['metsis-row-operations']],
+        'controls' => [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['metsis-row-operations-controls']],
+          'collection' => [
+            '#type' => 'component',
+            '#component' => 'metsis_drupal:icon_button',
+            '#slots' => [
+              'button' => [
+                '#type' => 'button',
+                '#value' => '144036 of 144036 children found',
+                '#attributes' => ['class' => ['metsis-collection-button']],
+              ],
+            ],
+          ],
+        ],
+      ],
+    ];
+  }
+}

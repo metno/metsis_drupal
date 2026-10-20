@@ -97,6 +97,17 @@ service definitions load, preserving configured datasource fields without a
 Solr connection. The browser test clears the field-definition cache and checks
 the bbox field type before saving the View, covering fresh CI installations.
 
+The responsive scenario enables deterministic default-row fixtures with and
+without thumbnails, long abstracts/titles/license URLs, and collection buttons.
+It includes an unbroken active-search label and checks Stark, Olivero, and
+Claro at seven desktop/tablet/mobile widths,
+including either side of the old 768px breakpoint. Assertions measure page and
+result overflow, date-input bounds, search-button alignment, and usable
+abstract widths; mobile expansion is exercised by normal WebDriver clicks.
+It also assigns stale coordinates to hidden map tooltips to guard against
+resize-induced overflow. These fixtures are confined to the test module and
+enabled by test state; they do not query live Solr.
+
 The [quality workflow](../../.github/workflows/quality.yml) runs ESLint, Prettier,
 PHPStan, PHPCS, and PHPUnit. The reusable
 [Drupal preparation action](../../.github/actions/drupal-prepare/action.yml)

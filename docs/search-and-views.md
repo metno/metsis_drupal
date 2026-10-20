@@ -26,8 +26,19 @@ Under **Advanced → Other → METSIS filter sidebar**, set a positive width in
 `rem`, `em`, or `px` (default `24rem`). The setting supports default-display
 inheritance and per-display overrides on METSIS-index Views. Only the shared
 results layout consumes the width; ordinary layouts are unchanged.
-Narrow screens stack filters above results. Custom templates can consume the
+The shared layout wraps filters above results when its available width cannot
+fit the configured sidebar, a 26rem results column, and the gap. This responds
+to theme sidebars and gutters, not just the viewport. When wrapped, both
+sections fill the available width. Custom templates can consume the
 `--metsis-sidebar-width` CSS property.
+
+Default result rows stack their preview, abstract, and badges below a 44rem
+**row** width, including narrow desktop columns. Long titles and license URLs
+wrap, collection buttons fit their controls, and abstract expansion stays
+accessible on mobile. Long active-filter labels wrap without pushing
+no-results pages beyond the viewport. Temporal fields also stack within narrow filter
+containers. The search-box component resets theme form-item/action margins
+so its search and clear buttons remain aligned with the input.
 
 Choose **Custom** row style and supply a machine name for
 `metsis-search-row-custom--MACHINE-NAME.html.twig`. Replace underscores with
