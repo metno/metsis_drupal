@@ -20,19 +20,26 @@ class ViewsFiltersSummaryHooks {
   #[Hook('views_filters_summary_info_alter')]
   public function viewsFiltersSummaryInfoAlter(array &$info, FilterPluginBase $filter): void {
     // Handle custom summary for bounding box filter.
-    if ($filter->getPluginId() === 'metsis_filter_bbox' && !empty($filter->value)) {
-      if (!$filter->value['minX'] == '') {
-        // Format each value: 3 decimals for floats, as-is for ints.
-        $formatted_values = array_map(function ($v) {
-          return is_float($v + 0) ? number_format((float) $v, 3, '.', '') : (string) $v;
-        }, $filter->value);
-
-        $info['value'][0] = [
-          'id' => 0,
-          'raw' => 'bbox',
-          'value' => ucfirst($filter->operator) . '(' . implode(', ', $formatted_values) . ')',
-        ];
+    if ($filter->getPluginId() === 'metsis_filter_bbox') {
+      $info['value'] = [];
+      $coordinates = [];
+      foreach (['minX', 'maxX', 'minY', 'maxY'] as $coordinate) {
+        $value = $filter->value[$coordinate] ?? '';
+        if (!is_numeric($value)) {
+          return;
+        }
+        $coordinates[] = $value;
       }
+      // Format each value: 3 decimals for floats, as-is for ints.
+      $formatted_values = array_map(function ($v) {
+        return is_float($v + 0) ? number_format((float) $v, 3, '.', '') : (string) $v;
+      }, $coordinates);
+
+      $info['value'][] = [
+        'id' => 0,
+        'raw' => 'bbox',
+        'value' => ucfirst($filter->operator) . '(' . implode(', ', $formatted_values) . ')',
+      ];
     }
 
     // Handle custom summary for date range filter.
@@ -72,17 +79,10 @@ class ViewsFiltersSummaryHooks {
    */
   #[Hook('views_filters_summary_filter_value_alter')]
   public function viewsFiltersSummaryFilterValueAlter(mixed &$value, FilterPluginBase $filter): void {
-    // For bbox filter: User Permissions plugin does not properly
-    // populate the filter value.
-    if ($filter->getPluginId() === 'metsis_filter_bbox') {
+    if (in_array($filter->getPluginId(), ['metsis_filter_bbox', 'metsis_filter_date_range'], TRUE)) {
       $inputs = $filter->view->getExposedInput();
-      $value = $inputs[$filter->options['id']];
-    }
-
-    // For date range filter: Similarly ensure value is properly populated.
-    if ($filter->getPluginId() === 'metsis_filter_date_range') {
-      $inputs = $filter->view->getExposedInput();
-      $value = $inputs[$filter->options['id']] ?? NULL;
+      $identifier = $filter->options['expose']['identifier'];
+      $value = $inputs[$identifier] ?? NULL;
     }
   }
 

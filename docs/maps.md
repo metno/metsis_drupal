@@ -47,6 +47,21 @@ The sizing stylesheet uses an ordinary Drupal library, separate from Vite
 processing, to avoid invalid development asset URLs. Width fits its container,
 including narrow columns and non-tabbed layouts.
 
+All input modes share the same full-width fieldset layout, with the optional
+predicate above the inputs rather than floating beside the next filter:
+
+| Use map | Also show user input | Use tabs | Rendered inputs |
+| ------- | -------------------- | -------- | --------------- |
+| Off | Either | Either | Coordinates only |
+| On | Off | Either | Map only; hidden coordinates remain in the form |
+| On | On | Off | Coordinates followed by map |
+| On | On | On | Map and coordinates in the `bbox_form_tabs` SDC |
+
+Each mode supports an exposed or fixed predicate. Coordinate fields wrap within
+narrow columns. The live longitude/latitude readout is positioned over the map
+and cannot change its intrinsic width during pointer movement. The tabs component
+receives fresh attributes, not the enclosing fieldset's classes and ID.
+
 ## 3. WMS and dataset visualisation
 
 The optional all-products WMS selector appears only when every resource has
@@ -68,3 +83,8 @@ bounds, mobile abstract expansion, and hidden-tooltip overflow across Stark,
 Olivero, and Claro at 1440, 1024, 820, 769, 768, 390, and 320px.
 See [browser testing](development/README.md#4-browser-tests-and-ci) for
 WebDriver prerequisites and CI diagnostics.
+
+The bbox layout scenario covers all four modes, with and without an exposed
+predicate, across Solo, Olivero, and Stark at 1440, 390, and 320px. It checks
+control containment, separation from the next filter, tab switching, real
+canvases, and less than 1px map/fieldset width change during pointer movement.

@@ -100,9 +100,236 @@ final class MetsisMapsTest extends WebDriverTestBase {
   }
 
   /**
+   * Tests temporal predicates above date fields with configurable identifiers.
+   */
+  public function testTemporalLayouts(): void {
+    $this->container->get('theme_installer')->install(['solo', 'olivero']);
+    foreach (['solo', 'olivero', 'stark'] as $theme) {
+      $this->config('system.theme')->set('default', $theme)->save();
+      foreach ([FALSE, TRUE] as $predicate) {
+        $view = View::load('metsis_search');
+        $displays = $view->get('display');
+        foreach ($displays['default']['display_options']['filters'] as &$filter) {
+          if ($filter['plugin_id'] === 'metsis_filter_date_range') {
+            $filter['expose']['identifier'] = 'custom_dates';
+            $filter['expose']['operator_id'] = 'custom_date_predicate';
+            $filter['expose']['use_operator'] = $predicate;
+          }
+        }
+        unset($filter);
+        $view->set('display', $displays)->save();
+        $this->drupalGet('metsis/search', [
+          'query' => [
+            'custom_dates' => ['min' => '2020-01-01', 'max' => '2021-12-31'],
+            'custom_date_predicate' => 'within',
+          ],
+        ]);
+        $this->assertSession()->elementsCount('css', '.metsis-date-range-fieldset select', $predicate ? 1 : 0);
+        $this->assertSession()->fieldValueEquals('custom_dates[min]', '2020-01-01');
+        $this->assertSession()->fieldValueEquals('custom_dates[max]', '2021-12-31');
+        if ($predicate) {
+          $this->assertSession()->fieldValueEquals('custom_date_predicate', 'within');
+        }
+        foreach ([1440, 390, 320] as $width) {
+          $this->getSession()->resizeWindow($width, 1000);
+          $this->assertTemporalLayout("$theme/predicate=$predicate/$width");
+        }
+        $this->getSession()->getPage()->find('css', '.metsis-filters input[type="submit"]')->click();
+        $this->assertSession()->assertWaitOnAjaxRequest();
+        $this->assertTemporalLayout("$theme/after AJAX");
+      }
+    }
+  }
+
+  /**
+   * Verifies temporal controls do not overlap and fill their available row.
+   */
+  private function assertTemporalLayout(string $context): void {
+    $layout = $this->getSession()->evaluateScript(<<<'JS'
+      (function () {
+        const f = document.querySelector(".metsis-date-range-fieldset");
+        const b = f.getBoundingClientRect();
+        const fields = Array.from(f.querySelectorAll("input[type=date]"));
+        const select = f.querySelector("select");
+        const dates = f.querySelector(".metsis-date-range-fields").getBoundingClientRect();
+        return {
+          contained: fields.concat(select ? [select] : []).every(e => {
+            const r = e.getBoundingClientRect();
+            return r.width > 0 && r.left >= b.left && r.right <= b.right + 1 && r.bottom <= b.bottom + 1;
+          }),
+          above: !select || select.getBoundingClientRect().bottom <= Math.min(...fields.map(e => e.getBoundingClientRect().top)),
+          fullWidth: !select || Math.abs(select.getBoundingClientRect().width - dates.width) < 2
+        };
+      })()
+      JS);
+    self::assertTrue($layout['contained'], "$context: temporal controls must remain inside the fieldset.");
+    self::assertTrue($layout['above'], "$context: predicate must be above both dates.");
+    self::assertTrue($layout['fullWidth'], "$context: predicate must fill the date row width.");
+  }
+
+  /**
+   * Tests every bbox input mode with predicates, themes, and narrow layouts.
+   */
+  public function testBboxLayouts(): void {
+    $this->container->get('theme_installer')->install(['solo', 'olivero']);
+    foreach (['solo', 'olivero', 'stark'] as $theme) {
+      $this->config('system.theme')->set('default', $theme)->save();
+      foreach ([
+        'map' => [TRUE, FALSE, FALSE],
+        'coordinates' => [FALSE, FALSE, FALSE],
+        'combined' => [TRUE, TRUE, FALSE],
+        'tabs' => [TRUE, TRUE, TRUE],
+      ] as $mode => [$map, $coords, $tabs]) {
+        foreach ([FALSE, TRUE] as $predicate) {
+          $view = View::load('metsis_search');
+          $displays = $view->get('display');
+          foreach ($displays['default']['display_options']['filters'] as &$filter) {
+            if ($filter['plugin_id'] === 'metsis_filter_bbox') {
+              $filter['expose']['map_input'] = $map;
+              $filter['expose']['user_input'] = $coords;
+              $filter['expose']['tabs_component'] = $tabs;
+              $filter['expose']['use_operator'] = $predicate;
+            }
+          }
+          unset($filter);
+          $view->set('display', $displays)->save();
+          $this->drupalGet('metsis/search');
+          $this->assertSession()->elementsCount('css', '.metsis-bbox-fieldset', 1);
+          $this->assertSession()->elementsCount('css', '.metsis-bbox-fieldset select', $predicate ? 1 : 0);
+          $this->assertSession()->elementsCount('css', '.metsis-bbox-fieldset [data-metsis-bbox-coordinate]', 4);
+          $this->assertSession()->elementsCount('css', '.metsis-bbox-fieldset input[type="hidden"]', $map && !$coords ? 4 : 0);
+          $this->assertSession()->elementsCount('css', '.metsis-bbox-fieldset .bbox-form-tabs', $tabs ? 1 : 0);
+          foreach ([1440, 390, 320] as $width) {
+            $this->getSession()->resizeWindow($width, 1000);
+            if ($map) {
+              $this->assertMap('.bbox-map-filter-container', 250);
+            }
+            $this->assertBboxLayout("$theme/$mode/predicate=$predicate/$width");
+            if ($tabs) {
+              $this->getSession()->getPage()->find('css', '.bbox-form-tabs [aria-controls="panel-coords"]')->click();
+              $this->assertSession()->elementsCount('css', '.bbox-form-tabs .tab-panel.is-active input[type="text"]', 4);
+              $this->assertBboxLayout("$theme/coordinates tab/$width");
+              $this->getSession()->getPage()->find('css', '.bbox-form-tabs [aria-controls="panel-map"]')->click();
+              $this->assertMap('.bbox-map-filter-container', 250);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Checks actual child bounds and map stability after pointer movement.
+   */
+  private function assertBboxLayout(string $context): void {
+    $layout = $this->getSession()->evaluateScript(<<<'JS'
+      (function () {
+        const fieldset = document.querySelector(".metsis-bbox-fieldset");
+        const bounds = fieldset.getBoundingClientRect();
+        const next = Array.from(fieldset.parentElement.querySelectorAll("fieldset")).find(e => e !== fieldset);
+        const controls = Array.from(fieldset.querySelectorAll("select, input[type=text], .bbox-map-filter-container")).filter(e => e.getClientRects().length);
+        return {
+          contained: controls.every(e => {
+            const r = e.getBoundingClientRect();
+            return r.width > 0 && r.left >= bounds.left && r.right <= bounds.right + 1 && r.bottom <= bounds.bottom + 1;
+          }),
+          fullWidth: Math.abs(bounds.width - fieldset.parentElement.getBoundingClientRect().width) < 2,
+          separated: !next || next.getBoundingClientRect().top >= bounds.bottom,
+          width: bounds.width,
+          mapWidth: fieldset.querySelector(".bbox-map-filter-container")?.getBoundingClientRect().width ?? 0
+        };
+      })()
+      JS);
+    self::assertTrue($layout['contained'], "$context: controls must stay inside the bbox fieldset.");
+    self::assertTrue($layout['fullWidth'], "$context: bbox fieldset must fill the filter column.");
+    self::assertTrue($layout['separated'], "$context: bbox must not overlap the next filter.");
+    $map = $this->getSession()->getPage()->find('css', '.bbox-map-filter-container');
+    if (!$map || !$map->isVisible()) {
+      return;
+    }
+    foreach ([30, 80, 120] as $offset) {
+      $this->getSession()->executeScript(<<<JS
+        (function () {
+          const map = document.querySelector(".bbox-map-filter-container");
+          const r = map.getBoundingClientRect();
+          map.querySelector(".ol-viewport").dispatchEvent(new PointerEvent("pointermove", {
+            bubbles: true, clientX: r.left + $offset, clientY: r.top + 100, pointerType: "mouse"
+          }));
+        })();
+        JS);
+      $stable = $this->getSession()->evaluateScript('Math.abs(document.querySelector(".metsis-bbox-fieldset").getBoundingClientRect().width - ' . $layout['width'] . ') < 1 && Math.abs(document.querySelector(".bbox-map-filter-container").getBoundingClientRect().width - ' . $layout['mapWidth'] . ') < 1');
+      self::assertTrue($stable, "$context: pointer coordinates must not resize the map or fieldset.");
+    }
+    $this->assertSession()->elementTextContains('css', '.bbox-map-coordinates', 'lon:');
+  }
+
+  /**
+   * Tests summary removal for both Solr fields and renamed exposed inputs.
+   */
+  public function testBboxSummaryRemoval(): void {
+    foreach (['bbox', 'geospatial_bounds3d'] as $field) {
+      foreach ([[FALSE, TRUE], [TRUE, TRUE], [FALSE, FALSE], [TRUE, FALSE]] as [$user_input, $use_ajax]) {
+        $view = View::load('metsis_search');
+        $displays = $view->get('display');
+        $options = &$displays['default']['display_options'];
+        $options['use_ajax'] = $use_ajax;
+        foreach ($options['filters'] as $id => $filter) {
+          if ($filter['plugin_id'] === 'metsis_filter_bbox') {
+            unset($options['filters'][$id]);
+            $filter['id'] = $field;
+            $filter['field'] = $field;
+            $filter['expose']['identifier'] = 'custom_bounds';
+            $filter['expose']['operator_id'] = 'custom_predicate';
+            $filter['expose']['use_operator'] = TRUE;
+            $filter['expose']['map_input'] = TRUE;
+            $filter['expose']['user_input'] = $user_input;
+            $options['filters'][$field] = $filter;
+            break;
+          }
+        }
+        $view->set('display', $displays)->save();
+        $this->drupalGet('metsis/search', [
+          'query' => [
+            'text' => 'retained search',
+            'custom_bounds' => ['minX' => '0', 'maxX' => '20', 'minY' => '0', 'maxY' => '70'],
+            'custom_predicate' => 'within',
+          ],
+        ]);
+        $selector = '.views-filters-summary a[data-remove-selector="custom_bounds:bbox"]';
+        $this->assertSession()->elementsCount('css', $selector, 1);
+        $this->assertSession()->elementTextContains('css', '.views-filters-summary', 'Within(0, 20, 0, 70)');
+        $this->assertSession()->elementExists('css', $selector)->click();
+        if ($use_ajax) {
+          $this->assertSession()->assertWaitOnAjaxRequest();
+        }
+        $this->assertSession()->elementNotExists('css', $selector);
+        foreach (['minX', 'maxX', 'minY', 'maxY'] as $coordinate) {
+          $input = $this->assertSession()->elementExists('css', 'input[name="custom_bounds[' . $coordinate . ']"]');
+          self::assertSame('', $input->getValue());
+        }
+        $this->assertSession()->fieldValueEquals('text', 'retained search');
+        $this->assertSession()->fieldValueEquals('custom_predicate', 'within');
+      }
+    }
+  }
+
+  /**
    * Tests initial rendering, tab resizing, AJAX, and the exposed-form block.
    */
   public function testMaps(): void {
+    $view = View::load('metsis_search');
+    $displays = $view->get('display');
+    $bbox_id = '';
+    foreach ($displays['default']['display_options']['filters'] as $id => &$filter) {
+      if ($filter['plugin_id'] === 'metsis_filter_bbox') {
+        $bbox_id = $id;
+        $filter['expose']['map_input'] = TRUE;
+        $filter['expose']['user_input'] = TRUE;
+        $filter['expose']['tabs_component'] = TRUE;
+      }
+    }
+    unset($filter);
+    $view->set('display', $displays)->save();
     $this->drupalGet('metsis/search');
     $this->assertMap('.metsis-search-map .map-container', 400);
     $this->assertMap('.bbox-map-filter-container', 250);
@@ -121,7 +348,7 @@ final class MetsisMapsTest extends WebDriverTestBase {
     $this->drupalPlaceBlock('metsis_search_exposed_form', [
       'id' => 'map_filter_block',
       'region' => 'sidebar_first',
-      'shown_filters' => ['bbox'],
+      'shown_filters' => [$bbox_id],
     ]);
     $this->drupalGet('metsis/search');
     self::assertCount(2, $this->getSession()->getPage()->findAll('css', '.bbox-map-filter-container'));

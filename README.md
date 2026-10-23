@@ -69,6 +69,15 @@ adapts to the theme's available content width. Result cards and temporal
 controls reflow within narrow columns, retaining usable mobile abstracts
 and collection actions.
 
+Geographic [filter summaries](docs/search-and-views.md#geographic-filter-summaries)
+support `bbox` and `geospatial_bounds3d`, renamed exposed identifiers, and
+removal of map-only or manually entered coordinates.
+Map-only, coordinates-only, combined, and tabbed
+[bbox layouts](docs/maps.md#2-bounding-box-filter) share responsive sizing and
+keep the predicate and live map readout from displacing adjacent controls.
+The [temporal filter](docs/search-and-views.md#temporal-filter-layout) similarly
+keeps exposed predicates above the date inputs, including with renamed identifiers.
+
 Result-row [component settings](docs/search-and-views.md#2-layout-and-templates)
 configure temporal extent notation/icon, DOI and icon sizes. Metadata details
 and landing pages fall back to the [license text](docs/metadata.md#license)

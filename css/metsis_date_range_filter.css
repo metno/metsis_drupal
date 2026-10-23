@@ -1,0 +1,86 @@
+.metsis-date-range-fieldset,
+#page-wrapper
+  form.views-exposed-form
+  .exposed-form
+  .metsis-date-range-fieldset {
+  box-sizing: border-box;
+  flex: 0 0 100%;
+  align-self: stretch;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  margin-inline: 0;
+}
+
+.metsis-date-range-fieldset > .fieldset-wrapper,
+#page-wrapper
+  form.views-exposed-form
+  .metsis-date-range-fieldset
+  > .fieldset-wrapper {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.5rem;
+}
+
+.metsis-date-range-fieldset > .fieldset-wrapper::before,
+.metsis-date-range-fieldset > .fieldset-wrapper::after,
+.metsis-date-range-fieldset .metsis-date-range-fields::before,
+.metsis-date-range-fieldset .metsis-date-range-fields::after {
+  content: none;
+  display: none;
+}
+
+.metsis-date-range-fieldset > .fieldset-wrapper > *,
+#page-wrapper
+  form.views-exposed-form
+  .metsis-date-range-fieldset
+  > .fieldset-wrapper
+  > * {
+  box-sizing: border-box;
+  float: none;
+  flex: initial;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+}
+
+.metsis-date-range-fieldset .metsis-date-range-fields,
+#page-wrapper
+  form.views-exposed-form
+  .metsis-date-range-fieldset
+  .metsis-date-range-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  align-items: start;
+  gap: 0.75rem;
+}
+
+.metsis-date-range-fieldset .metsis-date-range-field,
+#page-wrapper
+  form.views-exposed-form
+  .metsis-date-range-fieldset
+  .metsis-date-range-field {
+  box-sizing: border-box;
+  flex: initial;
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.metsis-date-range-fieldset :is(select, input[type="date"]),
+#page-wrapper
+  form.views-exposed-form
+  .metsis-date-range-fieldset
+  :is(select, input[type="date"]) {
+  box-sizing: border-box;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+}

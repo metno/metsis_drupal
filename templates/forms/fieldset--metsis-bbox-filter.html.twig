@@ -21,7 +21,7 @@
 {% set bbox_identifier = metsis_bbox_identifier|default('bbox') %}
 {% set bbox_operator_key = metsis_bbox_operator_key|default('bbox_op') %}
 {% set show_map = metsis_bbox_show_map|default(false) %}
-{% set show_coords = metsis_bbox_show_coords|default(true) %}
+{% set show_coords = metsis_bbox_show_coords ?? true %}
 {% set use_tabs = metsis_bbox_use_tabs|default(false) %}
 
 {% set operator_element = attribute(element, bbox_operator_key)|default(null) %}
@@ -62,7 +62,12 @@
     {% endif %}
 
     {% if show_map and show_coords and use_tabs and map_element and coords_element %}
-      {% embed 'metsis_drupal:bbox_form_tabs' with {default_tab: 'map'} %}
+      {% embed 'metsis_drupal:bbox_form_tabs' with {
+        default_tab: 'map',
+        attributes: create_attribute(),
+        map_element: map_element,
+        coords_element: coords_element,
+      } only %}
         {% block map_input_tab %}
           {{ map_element }}
         {% endblock %}
@@ -74,6 +79,7 @@
       {{ coords_element }}
       {{ map_element }}
     {% elseif show_map and map_element %}
+      {{ coords_element }}
       {{ map_element }}
     {% elseif show_coords and coords_element %}
       {{ coords_element }}

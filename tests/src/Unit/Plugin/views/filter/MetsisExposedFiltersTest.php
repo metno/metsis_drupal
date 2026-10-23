@@ -51,6 +51,10 @@ final class MetsisExposedFiltersTest extends UnitTestCase {
     self::assertArrayHasKey('custom_predicate', $form['custom_bounds_wrapper']);
     self::assertArrayNotHasKey('custom_bounds_op', $form['custom_bounds_wrapper']);
     self::assertArrayHasKey('data-bef-auto-submit-exclude', $form['custom_bounds_wrapper']['custom_predicate']['#attributes']);
+    if ($filter instanceof MetsisSolrDateRangeFilter) {
+      self::assertContains('metsis-date-range-fieldset', $form['custom_bounds_wrapper']['#attributes']['class']);
+      self::assertContains('metsis_drupal/metsis_date_range_styles', $form['custom_bounds_wrapper']['#attached']['library']);
+    }
     if ($filter instanceof MetsisSolrBboxFilter) {
       self::assertSame(250, $filter->getExposedMapHeight());
       self::assertSame('--metsis-bbox-map-height: 250px;', $form['custom_bounds_wrapper']['bbox_map_filter']['map']['#attributes']['style']);
@@ -64,6 +68,9 @@ final class MetsisExposedFiltersTest extends UnitTestCase {
     $filter->buildExposedForm($form, new FormState());
     self::assertArrayNotHasKey('custom_predicate', $form['custom_bounds_wrapper']);
     self::assertArrayHasKey('custom_bounds', $form['custom_bounds_wrapper']);
+    if ($filter instanceof MetsisSolrDateRangeFilter) {
+      self::assertContains('metsis_drupal/metsis_date_range_styles', $form['custom_bounds_wrapper']['#attached']['library']);
+    }
   }
 
   /**
@@ -74,6 +81,54 @@ final class MetsisExposedFiltersTest extends UnitTestCase {
       'bbox' => [MetsisSolrBboxFilter::class, ['minX' => '', 'maxX' => '', 'minY' => '', 'maxY' => '']],
       'dates' => [MetsisSolrDateRangeFilter::class, ['min' => '', 'max' => '']],
     ];
+  }
+
+  /**
+   * Tests all input modes attach layout independently of map and tab assets.
+   */
+  public function testBboxInputModes(): void {
+    $modes = [
+      [FALSE, FALSE, FALSE],
+      [TRUE, FALSE, FALSE],
+      [TRUE, TRUE, FALSE],
+      [TRUE, TRUE, TRUE],
+    ];
+    foreach ($modes as [$map, $coords, $tabs]) {
+      foreach ([FALSE, TRUE] as $predicate) {
+        $filter = $this->getMockBuilder(MetsisSolrBboxFilter::class)->disableOriginalConstructor()->onlyMethods([])->getMock();
+        $filter->setStringTranslation($this->getStringTranslationStub());
+        $filter->options = [
+          'exposed' => TRUE,
+          'is_grouped' => FALSE,
+          'expose' => [
+            'identifier' => 'custom_bounds',
+            'operator_id' => 'custom_predicate',
+            'use_operator' => $predicate,
+            'label' => 'Bounds',
+            'description' => '',
+            'map_input' => $map,
+            'user_input' => $coords,
+            'tabs_component' => $tabs,
+          ],
+        ];
+        $filter->value = ['minX' => '', 'maxX' => '', 'minY' => '', 'maxY' => ''];
+        $filter->operator = 'intersects';
+        $form = [];
+        $filter->buildExposedForm($form, new FormState());
+        $wrapper = $form['custom_bounds_wrapper'];
+        self::assertContains('metsis_drupal/bbox_map_filter_styles', $wrapper['#attached']['library']);
+        self::assertSame($map, $wrapper['#metsis_bbox_show_map']);
+        self::assertSame(!$map || $coords, $wrapper['#metsis_bbox_show_coords']);
+        self::assertSame($tabs, $wrapper['#metsis_bbox_use_tabs']);
+        self::assertSame($predicate, isset($wrapper['custom_predicate']));
+        self::assertContains('metsis-bbox-fields', $wrapper['custom_bounds']['#attributes']['class']);
+        self::assertSame($map, isset($wrapper['bbox_map_filter']));
+        foreach (['minX', 'maxX', 'minY', 'maxY'] as $coordinate) {
+          self::assertSame($map && !$coords ? 'hidden' : 'textfield', $wrapper['custom_bounds'][$coordinate]['#type']);
+          self::assertContains('metsis-bbox-field', $wrapper['custom_bounds'][$coordinate]['#wrapper_attributes']['class']);
+        }
+      }
+    }
   }
 
   /**
@@ -136,6 +191,26 @@ final class MetsisExposedFiltersTest extends UnitTestCase {
         $view_form['bounds_wrapper']['bbox_map_filter']['map']['#attributes']['style'],
       );
     }
+  }
+
+  /**
+   * Tests zero coordinates are valid with a renamed bbox identifier.
+   */
+  public function testZeroBboxCoordinates(): void {
+    $filter = $this->getMockBuilder(MetsisSolrBboxFilter::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods([])
+      ->getMock();
+    $filter->setStringTranslation($this->getStringTranslationStub());
+    $filter->options = [
+      'exposed' => TRUE,
+      'expose' => ['identifier' => 'custom_bounds'],
+    ];
+    $state = new FormState();
+    $state->setValue('custom_bounds', ['minX' => '0', 'maxX' => '20', 'minY' => '0', 'maxY' => '70']);
+    $form = [];
+    $filter->validateExposed($form, $state);
+    self::assertSame([], $state->getErrors());
   }
 
   /**

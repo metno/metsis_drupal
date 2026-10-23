@@ -29,6 +29,11 @@ bbox_map_filter_styles:
     component:
       css/metsis_bbox_map_filter.css: {}
 
+metsis_date_range_styles:
+  css:
+    component:
+      css/metsis_date_range_filter.css: {}
+
 metsis_filter_autosubmit:
   version: 1.x
   js:
@@ -44,6 +49,14 @@ metsis_icon_sync:
   dependencies:
     - core/drupal
     - core/once
+
+metsis_bbox_summary:
+  js:
+    js/metsis-bbox-summary.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - views_filters_summary/views_filters_summary
 
 metsis_search_layout:
   version: 1.x

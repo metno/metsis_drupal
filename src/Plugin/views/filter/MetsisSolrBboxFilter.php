@@ -144,9 +144,13 @@ class MetsisSolrBboxFilter extends FilterPluginBase implements ContainerFactoryP
     $form[$wrapper]['#metsis_bbox_show_map'] = $map_input_enabled;
     $form[$wrapper]['#metsis_bbox_show_coords'] = !$map_input_enabled || $user_input_enabled;
     $form[$wrapper]['#metsis_bbox_use_tabs'] = $map_input_enabled && $user_input_enabled && $tabs_component_enabled;
+    $form[$wrapper]['#attached']['library'][] = 'metsis_drupal/metsis_bbox_summary';
+    $form[$wrapper]['#attached']['library'][] = 'metsis_drupal/bbox_map_filter_styles';
+    $form[$wrapper][$identifier]['#attributes']['class'][] = 'metsis-bbox-fields';
 
     foreach (['minX', 'maxX', 'minY', 'maxY'] as $coordinate) {
       $form[$wrapper][$identifier][$coordinate]['#attributes']['data-metsis-bbox-coordinate'] = $coordinate;
+      $form[$wrapper][$identifier][$coordinate]['#wrapper_attributes']['class'][] = 'metsis-bbox-field';
     }
 
     if (isset($form[$wrapper][$operator_key]) && is_array($form[$wrapper][$operator_key])) {
@@ -460,7 +464,7 @@ class MetsisSolrBboxFilter extends FilterPluginBase implements ContainerFactoryP
     // Check that all coordinates are filled.
     foreach ($coordinates as $coordinate) {
       $value = trim((string) ($values[$coordinate] ?? ''));
-      if (empty($value)) {
+      if ($value === '') {
         $has_missing_values = TRUE;
         $form_state->setErrorByName("{$identifier}][{$coordinate}",
           $this->t('The @coordinate coordinate is required.',

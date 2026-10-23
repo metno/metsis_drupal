@@ -96,6 +96,8 @@ class MetsisSolrDateRangeFilter extends SearchApiDate {
       return;
     }
 
+    $form[$wrapper]['#attributes']['class'][] = 'metsis-date-range-fieldset';
+    $form[$wrapper]['#attached']['library'][] = 'metsis_drupal/metsis_date_range_styles';
     $form[$wrapper][$identifier]['#attributes']['class'][] = 'metsis-date-range-fields';
     foreach (['min', 'max'] as $bound) {
       if (isset($form[$wrapper][$identifier][$bound])) {

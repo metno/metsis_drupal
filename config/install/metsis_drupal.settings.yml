@@ -43,13 +43,12 @@ blacklisted_wms_layers:
   - lon
   - latitude
   - longitude
+  - NBS
 bokeh_plot_service_url: 'https://example-api.com/plot'
 feature_type_lookup_service: 'https://example.api.com/featureType'
 enabled_export_types:
   - mmd
   - dif10
-  - iso
-  - geonorge
   - dcatap
 search_meta_description: 'Search scientific datasets on biodiversity, geology, hydrology, cloud cover, weather, climate, atmospheric conditions, climate change, precipitation, permafrost, sea ice and other key environmental topics — powered by ISO 19115 standards.'
 vocab_source_path: vendor/metno/mmd/thesauri/mmd-vocabulary.ttl

@@ -52,6 +52,30 @@ compact labels, date icon and icon ID. Views stores these as flat row options
 (for example `temporal_extent_short_notation`); the nested form fieldsets are
 flattened on submit.
 
+### Geographic filter summaries
+
+The bounding-box filter supports both the Solr `bbox` field and the
+`geospatial_bounds3d` RPT field. Its exposed **Filter identifier** can differ
+from the Views handler ID or Solr field name; summary input lookup uses that
+configured identifier.
+
+The summary displays one spatial predicate with all four coordinates, including
+zero values. Its remove link clears only those coordinates, including hidden
+map-only inputs, and preserves other filters and the selected predicate.
+Removal works with Views AJAX and ordinary page submissions.
+
+### Temporal filter layout
+
+The date-range filter places an exposed predicate on a full-width row above
+the start/end inputs. Date fields wrap according to available width; a fixed
+predicate omits the dropdown without changing the date inputs. Styling is
+attached by the plugin and uses semantic classes, so renamed filter/operator
+identifiers and exposed-form blocks receive the same layout.
+
+Layout regression coverage includes Solo, Olivero, and Stark at 1440, 390, and
+320px, with exposed/fixed predicates, custom identifiers, saved date values,
+and Views AJAX refreshes.
+
 ## 3. Exposed-form block
 
 The **METSIS search exposed form** block renders filters from the

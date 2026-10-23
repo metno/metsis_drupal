@@ -11,6 +11,14 @@ use Drupal\Core\Url;
 use Drupal\views\ViewExecutable;
 
 /**
+ * Implements hook_views_data_alter().
+ */
+function metsis_map_test_views_data_alter(array &$data): void {
+  // The mock backend cannot supply Solr's dynamic DateRange handler mapping.
+  $data['search_api_index_metsis']['temporal_extent_period_dr']['filter']['id'] = 'metsis_filter_date_range';
+}
+
+/**
  * Implements hook_views_pre_render().
  */
 function metsis_map_test_views_pre_render(ViewExecutable $view): void {
