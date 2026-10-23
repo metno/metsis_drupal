@@ -58,8 +58,9 @@ export function formatDate(value) {
   if (!value) {
     return "";
   }
-  const match = /^(\d{4}-\d{2}-\d{2})/.exec(String(value));
-  return match ? match[1] : String(value);
+  /*const match = /^(\d{4}-\d{2}-\d{2})/.exec(String(value));
+  return match ? match[1] : String(value);*/
+  return value;
 }
 
 /**
