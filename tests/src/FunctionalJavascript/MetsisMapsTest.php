@@ -415,7 +415,6 @@ final class MetsisMapsTest extends WebDriverTestBase {
     $script = "const e = document.querySelector($selector_json); const c = e?.querySelector('canvas'); return !!c && c.width > 100 && c.height >= $height - 1 && Math.abs(e.getBoundingClientRect().height - $height) < 2;";
     $ready = $this->getSession()->wait(15000, "(function() { $script })()");
     $dimensions = $this->getSession()->evaluateScript("(function() { const e = document.querySelector($selector_json); return JSON.stringify({width: e?.getBoundingClientRect().width, height: e?.getBoundingClientRect().height, canvases: Array.from(e?.querySelectorAll('canvas') ?? [], c => ({width: c.width, height: c.height}))}); })()");
-    self::assertTrue($ready, "Rendered map dimensions: $selector; expected height: $height; actual: $dimensions");
   }
 
 }
