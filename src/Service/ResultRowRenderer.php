@@ -230,11 +230,11 @@ final class ResultRowRenderer {
         ],
       ];
 
-      if (!empty($solr_doc['data_access_url_ogc_wms'])) {
+      /* if (!empty($solr_doc['data_access_url_ogc_wms'])) {
         $wms_url = Url::fromRoute('metsis_drupal.wms', ['id' => $fields['id']])->toString();
         $fields['thumbnail']['#prefix'] = '<a href="' . $wms_url . '" title="Visualise WMS layers">';
         $fields['thumbnail']['#suffix'] = '</a>';
-      }
+      }*/
     }
 
     $fields['last_metadata_update'] = $this->getLatestMetadataUpdate($solr_doc);
