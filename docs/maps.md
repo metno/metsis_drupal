@@ -72,6 +72,9 @@ selector and display an error.
 Search rows and dynamic landing pages can offer inline WMS and supported
 OPeNDAP feature visualisations. These HTMX fragments have independent mounts
 and do not replace the primary search map.
+Single-product WMS maps initially fit the product extent. Changing the layer
+preserves the user's zoom and map position so layers can be compared over the
+same area of interest.
 
 ## 4. Regression coverage
 

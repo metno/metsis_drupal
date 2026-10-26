@@ -109,6 +109,9 @@ final class MetsisSearchExposedFormBlockTest extends TestCase {
     $view->display_handler = $display;
     $view->filter = ['facets_collection' => $facet_filter];
     $view->exposed_widgets = [
+      'url' => ['#type' => 'textfield', '#element_validate' => ['honeypot_validate']],
+      'honeypot_time' => ['#type' => 'hidden', '#value' => 'honeypot-test-token'],
+      '#cache' => ['max-age' => 0, 'contexts' => ['user.permissions']],
       'hidden_filter_wrapper' => [
         '#type' => 'container',
         'hidden_filter' => ['#type' => 'textfield'],
@@ -253,6 +256,9 @@ final class MetsisSearchExposedFormBlockTest extends TestCase {
     }
 
     $form = $block->build();
+    self::assertSame($view->exposed_widgets['url'], $form['url']);
+    self::assertSame($view->exposed_widgets['honeypot_time'], $form['honeypot_time']);
+    self::assertSame($view->exposed_widgets['#cache'], $form['#cache']);
     self::assertArrayNotHasKey('hidden_filter', $form['metsis-search-filter-grid']['column_1']);
     self::assertArrayNotHasKey('hidden_filter_wrapper', $form['metsis-search-filter-grid']['column_1']);
     self::assertArrayNotHasKey('hidden_filter_op', $form['metsis-search-filter-grid']['column_1']);

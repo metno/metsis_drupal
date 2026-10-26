@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Drupal\metsis_drupal\Service;
 
-use Drupal\Core\Url;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
 use Drupal\metsis_drupal\Utility\MetsisHelper;
 use Drupal\metsis_drupal\LoggerTrait;
 
@@ -230,11 +231,12 @@ final class ResultRowRenderer {
         ],
       ];
 
-      /* if (!empty($solr_doc['data_access_url_ogc_wms'])) {
+      if (!empty($options['thumbnail_link_to_wms']) && !empty($solr_doc['data_access_url_ogc_wms'])) {
         $wms_url = Url::fromRoute('metsis_drupal.wms', ['id' => $fields['id']])->toString();
-        $fields['thumbnail']['#prefix'] = '<a href="' . $wms_url . '" title="Visualise WMS layers">';
+        $title = Html::escape((string) $this->t('Visualise WMS layers'));
+        $fields['thumbnail']['#prefix'] = '<a href="' . Html::escape($wms_url) . '" title="' . $title . '">';
         $fields['thumbnail']['#suffix'] = '</a>';
-      }*/
+      }
     }
 
     $fields['last_metadata_update'] = $this->getLatestMetadataUpdate($solr_doc);

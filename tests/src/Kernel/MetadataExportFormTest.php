@@ -29,6 +29,7 @@ final class MetadataExportFormTest extends KernelTestBase {
     'search_api_solr',
     'leaflet',
     'geofield',
+    'honeypot',
     'metsis_drupal',
   ];
 

@@ -60,7 +60,7 @@ const WMSLayerManager = ({
   const [wmsVersion, setWmsVersion] = useState("1.3.0");
   const [isLoading, setIsLoading] = useState(false);
   const [capabilitiesError, setCapabilitiesError] = useState("");
-  const lastFittedLayerRef = useRef("");
+  const lastFittedEndpointRef = useRef("");
   const wmsLayerRef = useRef(null);
   // Kept in sync with availableLayers state so effects can read it without
   // taking a dep on availableLayers (which would cause spurious layer recreation).
@@ -310,7 +310,7 @@ const WMSLayerManager = ({
   }, [availableLayers, selectedLayerDefinition]);
 
   useEffect(() => {
-    if (!mapInstance || !extentToFit) {
+    if (!mapInstance || !activeEndpoint || !extentToFit) {
       return;
     }
 
@@ -345,8 +345,9 @@ const WMSLayerManager = ({
     }
 
     const fitProjection = targetProjection || fallbackCode;
-    const fitKey = `${selectedLayer || "all"}|${fitProjection}|${extentToFit.join(",")}`;
-    if (lastFittedLayerRef.current === fitKey) {
+    // Layer changes must preserve the user's area of interest within a product.
+    const fitKey = `${activeEndpoint.serviceUrl}|${fitProjection}|${extentToFit.join(",")}`;
+    if (lastFittedEndpointRef.current === fitKey) {
       console.debug("[METSIS/WMS] Skipping duplicate fit", { fitKey });
       return;
     }
@@ -403,9 +404,10 @@ const WMSLayerManager = ({
       });
     }
 
-    lastFittedLayerRef.current = fitKey;
+    lastFittedEndpointRef.current = fitKey;
   }, [
     mapInstance,
+    activeEndpoint,
     selectedLayer,
     extentToFit,
     supportedProjectionCodes,

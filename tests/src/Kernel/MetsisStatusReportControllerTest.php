@@ -29,6 +29,7 @@ class MetsisStatusReportControllerTest extends KernelTestBase {
     'search_api_solr',
     'leaflet',
     'geofield',
+    'honeypot',
     'metsis_drupal',
 
     // Add other required modules if needed.

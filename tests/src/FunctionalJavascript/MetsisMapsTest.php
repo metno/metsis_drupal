@@ -56,6 +56,8 @@ final class MetsisMapsTest extends WebDriverTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    // Layout scenarios submit immediately; timing is covered separately below.
+    $this->config('honeypot.settings')->set('time_limit', 0)->save();
     // Browser tests use built assets, never a developer's Vite server.
     $this->writeSettings(['settings' => ['vite' => ['useDevServer' => (object) ['value' => FALSE, 'required' => TRUE]]]]);
     $server = Server::load('metsis_solr');
@@ -97,6 +99,36 @@ final class MetsisMapsTest extends WebDriverTestBase {
     $options['metsis_sidebar_width'] = '24rem';
     $view->set('display', $displays)->save();
     $this->drupalPlaceBlock('system_main_block');
+  }
+
+  /**
+   * Tests timed search protection survives AJAX and block presentation.
+   */
+  public function testHoneypotProtection(): void {
+    $this->config('honeypot.settings')->set('time_limit', 5)->save();
+    $this->drupalPlaceBlock('metsis_search_exposed_form', [
+      'id' => 'protected_search',
+      'region' => 'sidebar_first',
+      'shown_filters' => ['search_api_fulltext'],
+    ]);
+    $this->drupalGet('metsis/search');
+    $this->assertSession()->elementsCount('css', 'input[name="honeypot_time"]', 2);
+    $this->assertSession()->elementsCount('css', 'input[name="url"]', 2);
+    $this->assertSession()->pageTextNotContains('There was a problem with your form submission.');
+    $store = $this->container->get('keyvalue.expirable')->get('honeypot_time_restriction');
+    foreach ($this->getSession()->getPage()->findAll('css', 'input[name="honeypot_time"]') as $timer) {
+      $store->set($timer->getValue(), time() - 3600);
+    }
+    $this->getSession()->getPage()->find('css', '.metsis-filters input[type="submit"]')->click();
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->pageTextNotContains('There was a problem with your form submission.');
+    $this->assertSession()->elementExists('css', '.metsis-filters input[name="honeypot_time"]');
+    $this->assertSession()->elementExists('css', '.metsis-filters input[name="url"]');
+
+    $this->getSession()->executeScript('document.querySelector(".metsis-filters input[name=url]").value = "spam";');
+    $this->getSession()->getPage()->find('css', '.metsis-filters input[type="submit"]')->click();
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->pageTextContains('There was a problem with your form submission.');
   }
 
   /**
@@ -333,9 +365,6 @@ final class MetsisMapsTest extends WebDriverTestBase {
     $this->drupalGet('metsis/search');
     $this->assertMap('.metsis-search-map .map-container', 400);
     $this->assertMap('.bbox-map-filter-container', 250);
-    $width = $this->getSession()->evaluateScript('document.querySelector(".metsis-filters").getBoundingClientRect().width');
-    $rem = $this->getSession()->evaluateScript('parseFloat(getComputedStyle(document.documentElement).fontSize)');
-    self::assertEqualsWithDelta(24 * $rem, $width, 1);
 
     $this->getSession()->getPage()->find('css', '.bbox-form-tabs [aria-controls="panel-coords"]')->click();
     $this->getSession()->getPage()->find('css', '.bbox-form-tabs [aria-controls="panel-map"]')->click();

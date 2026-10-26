@@ -25,3 +25,4 @@ dependencies:
   - views_ajax_history:views_ajax_history
   - tagify:tagify
   - tagify:tagify_facets
+  - honeypot:honeypot

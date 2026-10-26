@@ -36,6 +36,7 @@ final class MetsisSettingsFormTest extends KernelTestBase {
     'views_filters_summary',
     'views_ajax_history',
     'geofield',
+    'honeypot',
     'metsis_drupal',
   ];
 

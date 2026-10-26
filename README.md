@@ -78,11 +78,18 @@ keep the predicate and live map readout from displacing adjacent controls.
 The [temporal filter](docs/search-and-views.md#temporal-filter-layout) similarly
 keeps exposed predicates above the date inputs, including with renamed identifiers.
 
+Honeypot automatically protects every METSIS-index exposed form, including the
+search block, and metadata export forms with a hidden trap and a submission
+time restriction. See [form protection](docs/search-and-views.md#honeypot-protection)
+for configuration, bypass permissions, and caching implications.
+
 Result-row [component settings](docs/search-and-views.md#2-layout-and-templates)
-configure temporal extent notation/icon, DOI and icon sizes. Metadata details
+configure temporal extent notation/icon, DOI and icon sizes, and optionally
+link WMS thumbnails to their visualisation page. Metadata details
 and landing pages fall back to the [license text](docs/metadata.md#license)
 when no license identifier exists. Result maps list overlapping feature titles
 on hover and open a [feature popup](docs/maps.md) with dataset details on click.
+Single-product WMS visualisations retain zoom and position when changing layers.
 
 ## 5. Development and testing
 

@@ -127,6 +127,7 @@ final class MetsisSearchRowTest extends TestCase {
         'custom_style_name' => '',
         'component_settings' => [
           'shared_icons' => ['component_icon_width' => '4'],
+          'thumbnail' => ['thumbnail_link_to_wms' => '1'],
           'doi_component' => [
             'doi_show_identifier' => '1',
             'doi_icon_size' => '32',
@@ -147,6 +148,7 @@ final class MetsisSearchRowTest extends TestCase {
     self::assertArrayNotHasKey('component_settings', $saved);
     self::assertSame('nbs', $saved['style']);
     self::assertSame(16, $saved['component_icon_width']);
+    self::assertTrue($saved['thumbnail_link_to_wms']);
     self::assertTrue($saved['doi_show_identifier']);
     self::assertSame(32, $saved['doi_icon_size']);
     self::assertFalse($saved['doi_logo_color']);

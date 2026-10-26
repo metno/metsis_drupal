@@ -6,6 +6,7 @@ namespace Drupal\Tests\metsis_drupal\Unit\Service;
 
 use Drupal\Core\Extension\Extension;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\metsis_drupal\Service\ConfigProvider;
 use Drupal\metsis_drupal\Service\LeafletMapRenderer;
 use Drupal\metsis_drupal\Service\MarkdownDetectorInterface;
@@ -15,6 +16,7 @@ use Drupal\metsis_drupal\Utility\MetsisHelper;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 /**
  * Tests row plugin component options reach the rendered components.
@@ -117,6 +119,43 @@ final class ResultRowRendererTest extends UnitTestCase {
     self::assertTrue($fields['doi_icon']['#props']['color']);
     self::assertSame(24, $fields['doi_icon']['#props']['size']);
     self::assertSame(88, $fields['license_icon']['#props']['width']);
+  }
+
+  /**
+   * Tests WMS thumbnail links are added only when enabled and available.
+   */
+  public function testThumbnailWmsLinkSetting(): void {
+    $document = $this->document() + [
+      'thumbnail_url' => 'https://example.test/thumbnail.png',
+      'data_access_url_ogc_wms' => 'https://example.test/wms',
+    ];
+    $fields = $this->createRenderer()->renderRow($document, [], []);
+    self::assertArrayNotHasKey('#prefix', $fields['thumbnail']);
+
+    $url_generator = $this->createMock(UrlGeneratorInterface::class);
+    $url_generator->expects(self::once())
+      ->method('generateFromRoute')
+      ->with('metsis_drupal.wms', ['id' => 'no-met-dataset-1'], [], FALSE)
+      ->willReturn('/metsis/wms/dataset-1');
+    $container = new ContainerBuilder();
+    $container->set('url_generator', $url_generator);
+    $previous_container = \Drupal::hasContainer() ? \Drupal::getContainer() : NULL;
+    \Drupal::setContainer($container);
+
+    try {
+      $fields = $this->createRenderer()->renderRow($document, ['thumbnail_link_to_wms' => TRUE], []);
+    }
+    finally {
+      if ($previous_container === NULL) {
+        \Drupal::unsetContainer();
+      }
+      else {
+        \Drupal::setContainer($previous_container);
+      }
+    }
+
+    self::assertSame('<a href="/metsis/wms/dataset-1" title="Visualise WMS layers">', $fields['thumbnail']['#prefix']);
+    self::assertSame('</a>', $fields['thumbnail']['#suffix']);
   }
 
 }

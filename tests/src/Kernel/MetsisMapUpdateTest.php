@@ -19,7 +19,7 @@ final class MetsisMapUpdateTest extends KernelTestBase {
    */
   protected static $modules = [
     'system', 'user', 'filter', 'views', 'search_api',
-    'search_api_solr', 'leaflet', 'geofield', 'metsis_drupal',
+    'search_api_solr', 'leaflet', 'geofield', 'honeypot', 'metsis_drupal',
   ];
 
   /**

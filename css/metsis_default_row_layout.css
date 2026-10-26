@@ -218,7 +218,7 @@
   word-break: break-word;
   /* font-style: italic; */
   overflow: hidden;
-  height: 350px;
+  height: 320px;
   transition: height 0.25s ease;
 }
 

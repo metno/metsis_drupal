@@ -43,6 +43,7 @@
         "drupal/views_ajax_history": "^1.8",
         "drupal/views_filters_summary": "^3.2",
         "drupal/tagify": "^2",
+        "drupal/honeypot": "^2.2",
         "metno/mmd": "^4"
     },
     "suggest": {

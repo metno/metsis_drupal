@@ -139,6 +139,7 @@ class MetsisSearchRow extends SearchApiRow implements ContainerFactoryPluginInte
     $options['temporal_extent_compact_labels'] = ['default' => TRUE];
     $options['temporal_extent_add_icon'] = ['default' => TRUE];
     $options['temporal_extent_icon_id'] = ['default' => 'date-time'];
+    $options['thumbnail_link_to_wms'] = ['default' => FALSE];
     // default, compact, detailed, custom.
     $options['style'] = ['default' => 'default'];
     $options['custom_style_name'] = ['default' => ''];
@@ -190,6 +191,18 @@ class MetsisSearchRow extends SearchApiRow implements ContainerFactoryPluginInte
     $form['component_settings']['shared_icons'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Shared icon settings'),
+    ];
+
+    $form['component_settings']['thumbnail'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Thumbnail settings'),
+    ];
+
+    $form['component_settings']['thumbnail']['thumbnail_link_to_wms'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Link thumbnails to WMS visualisation'),
+      '#default_value' => !empty($this->options['thumbnail_link_to_wms']),
+      '#description' => $this->t('When enabled, thumbnails for records with a WMS resource link to the WMS visualisation.'),
     ];
 
     $form['component_settings']['shared_icons']['component_icon_width'] = [
@@ -290,12 +303,14 @@ class MetsisSearchRow extends SearchApiRow implements ContainerFactoryPluginInte
     $values = (array) $form_state->getValue($parents, []);
     $component_settings = (array) ($values['component_settings'] ?? []);
     $shared_icons = (array) ($component_settings['shared_icons'] ?? []);
+    $thumbnail = (array) ($component_settings['thumbnail'] ?? []);
     $doi_component = (array) ($component_settings['doi_component'] ?? []);
     $temporal_component = (array) ($component_settings['temporal_extent_component'] ?? []);
     $icon_id = trim((string) ($temporal_component['temporal_extent_icon_id'] ?? 'date-time'));
 
     $component_options = [
       'component_icon_width' => max(16, (int) ($shared_icons['component_icon_width'] ?? 88)),
+      'thumbnail_link_to_wms' => !empty($thumbnail['thumbnail_link_to_wms']),
       'doi_show_identifier' => !empty($doi_component['doi_show_identifier']),
       'doi_icon_size' => max(12, (int) ($doi_component['doi_icon_size'] ?? 24)),
       'doi_logo_color' => !empty($doi_component['doi_logo_color']),

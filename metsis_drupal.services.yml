@@ -7,6 +7,10 @@ services:
     parent: logger.channel_base
     arguments: ["metsis"]
 
+  Drupal\metsis_drupal\Hook\HoneypotHooks:
+    arguments:
+      - "@honeypot"
+
   metsis_drupal.search_api_subscriber:
     class: Drupal\metsis_drupal\EventSubscriber\SearchApiSubscriber
     arguments: []

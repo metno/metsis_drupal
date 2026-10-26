@@ -60,6 +60,11 @@ does the row show “Not provided”.
 ## 2. Export and vocabularies
 
 Metadata exports use MMD and XSLT-oriented transformations.
+`MetadataExportForm` automatically requests the hidden Honeypot field and time
+restriction, including when embedded in metadata dialogs or landing pages.
+The standard Honeypot settings and bypass permission apply; see
+[form protection](search-and-views.md#honeypot-protection).
+Direct export controller/download routes are not forms and are unchanged.
 Vocabulary enrichment uses cached MMD SKOS data for labels and popovers.
 These features require MMD resources under `vendor/metno/mmd`.
 

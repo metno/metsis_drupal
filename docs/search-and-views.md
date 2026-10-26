@@ -10,6 +10,30 @@ requiring a query tag. `inactive` selects only Inactive metadata; `flat_search`
 matches datasets directly, omitting child joins/counts while retaining parent
 metadata. Other indexes remain unchanged.
 
+### Honeypot protection
+
+Every exposed form whose View uses `search_api_index_metsis` requests both
+`honeypot` and `time_restriction` from the Honeypot service. This includes new
+Views, all displays, Views exposed-form blocks, and the **METSIS search exposed
+form** block, regardless of query tags or the enabled filter selection.
+Metadata export forms receive the same protections.
+
+No per-form selection in Honeypot settings is required; the integration applies
+even when global protection is disabled or `views_exposed_form` is listed as
+unprotected. The standard `bypass honeypot protection` permission and Honeypot's
+protection-alter hooks remain effective.
+
+The trap field name, minimum time, logging, and expiration come from
+`honeypot.settings` (`/admin/config/content/honeypot`). A zero `time_limit`
+disables the timer. With a nonzero limit, fast searches and autosubmissions can
+be rejected, and Honeypot disables anonymous page caching; the timer element
+also has zero cache lifetime. AJAX submissions retain the trap and timer.
+
+Initial page loads and deep links without a submitted form ID or timer still
+work: Views always processes GET input, so only those navigation requests skip
+timer validation. The trap remains validated. This protects form submissions,
+not direct access to public search URLs or a general-purpose rate limit.
+
 ## 2. Layout and templates
 
 New Views retain the normal Views layout. Add the `metsis` query tag to opt into
@@ -51,6 +75,8 @@ and logo color, and temporal extent short (`start to end`) or long notation,
 compact labels, date icon and icon ID. Views stores these as flat row options
 (for example `temporal_extent_short_notation`); the nested form fieldsets are
 flattened on submit.
+The thumbnail setting can optionally link thumbnails with a WMS resource to
+the WMS visualisation page; it is disabled by default.
 
 ### Geographic filter summaries
 

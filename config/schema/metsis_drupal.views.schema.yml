@@ -170,6 +170,9 @@ views.row.metsis_search_row:
     temporal_extent_icon_id:
       type: string
       label: 'Temporal extent icon ID'
+    thumbnail_link_to_wms:
+      type: boolean
+      label: 'Link thumbnails to WMS visualisation'
     datacenter_name_fallback:
       type: string
       label: 'Datacenter Name Fallback'
