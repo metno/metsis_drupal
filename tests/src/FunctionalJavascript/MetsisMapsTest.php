@@ -441,9 +441,6 @@ final class MetsisMapsTest extends WebDriverTestBase {
     self::assertNotNull($element, "Map viewport not visible: $selector. Page text: " . $this->getSession()->getPage()->getText());
     $selector_json = json_encode($selector, JSON_THROW_ON_ERROR);
     $this->getSession()->executeScript("document.querySelector($selector_json).scrollIntoView(); document.querySelector($selector_json).dispatchEvent(new Event('pointerenter'));");
-    $script = "const e = document.querySelector($selector_json); const c = e?.querySelector('canvas'); return !!c && c.width > 100 && c.height >= $height - 1 && Math.abs(e.getBoundingClientRect().height - $height) < 2;";
-    $ready = $this->getSession()->wait(15000, "(function() { $script })()");
-    $dimensions = $this->getSession()->evaluateScript("(function() { const e = document.querySelector($selector_json); return JSON.stringify({width: e?.getBoundingClientRect().width, height: e?.getBoundingClientRect().height, canvases: Array.from(e?.querySelectorAll('canvas') ?? [], c => ({width: c.width, height: c.height}))}); })()");
   }
 
 }
