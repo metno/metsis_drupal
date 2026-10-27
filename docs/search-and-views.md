@@ -83,6 +83,11 @@ flattened on submit.
 The thumbnail setting can optionally link thumbnails with a WMS resource to
 the WMS visualisation page; it is disabled by default.
 
+The default row's **Export metadata** and **Download data** popovers use paired
+`Canvas`/`CanvasText` system colors for their panel surface and text. Transparent
+export buttons and data-access links remain readable with d8w3css and Solo
+without changing their actions or the theme's trigger-button styling.
+
 ### Geographic filter summaries
 
 The bounding-box filter supports both the Solr `bbox` field and the

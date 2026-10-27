@@ -114,7 +114,9 @@
   border: 1px solid #ccc;
   border-radius: 6px;
   padding: 0.4rem 0;
-  background: currentColor;
+  /* Transparent options need a contrasting surface, not the text color. */
+  color: CanvasText;
+  background: Canvas;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
   min-width: 220px;
   z-index: 100;

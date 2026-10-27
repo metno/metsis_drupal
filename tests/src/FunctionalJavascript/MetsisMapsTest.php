@@ -102,6 +102,68 @@ final class MetsisMapsTest extends WebDriverTestBase {
   }
 
   /**
+   * Tests readable export buttons and data-access links across themes.
+   */
+  public function testRowPopoverContrast(): void {
+    $this->container->get('state')->set('metsis_map_test.row_popovers', TRUE);
+    $this->container->get('theme_installer')->install(['solo', 'drupal8_w3css_theme']);
+    foreach (['solo', 'drupal8_w3css_theme'] as $theme) {
+      $this->config('system.theme')->set('default', $theme)->save();
+      $this->drupalPlaceBlock('system_main_block');
+      $this->drupalGet('metsis/search');
+      foreach ([1440, 390] as $width) {
+        $this->getSession()->resizeWindow($width, 1000);
+        foreach (['export', 'data-access'] as $type) {
+          $trigger = $this->assertSession()->elementExists('css', ".metsis-$type-trigger");
+          $this->getSession()->executeScript("document.querySelector('.metsis-$type-trigger').scrollIntoView({block: 'center'});");
+          $trigger->click();
+          $panel = ".metsis-$type-popover";
+          self::assertNotNull($this->assertSession()->waitForElementVisible('css', $panel));
+          $panel_json = json_encode($panel, JSON_THROW_ON_ERROR);
+          $this->assertSession()->elementExists('css', "$panel .metsis-popover-option");
+          $this->assertPopoverContrast($panel, "$theme/$width/$type/normal");
+          $this->getSession()->executeScript("document.querySelector($panel_json).querySelector('.metsis-popover-option').focus();");
+          $this->assertPopoverContrast($panel, "$theme/$width/$type/focus");
+          $this->getSession()->executeScript("document.querySelector($panel_json).hidePopover();");
+        }
+      }
+    }
+  }
+
+  /**
+   * Checks WCAG AA text contrast over the composited option/panel background.
+   */
+  private function assertPopoverContrast(string $selector, string $context): void {
+    $selector_json = json_encode($selector, JSON_THROW_ON_ERROR);
+    $contrast = $this->getSession()->wait(3000, <<<JS
+      (function () {
+        const panel = document.querySelector($selector_json);
+        const parse = color => color.match(/[\\d.]+/g).map(Number);
+        const luminance = rgb => rgb.slice(0, 3).map(v => {
+          v /= 255;
+          return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+        }).reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0);
+        return Array.from(panel.querySelectorAll(".metsis-popover-option")).every(option => {
+          let bg = parse(getComputedStyle(panel).backgroundColor);
+          const layers = [];
+          for (let e = option; e !== panel; e = e.parentElement) {
+            layers.unshift(parse(getComputedStyle(e).backgroundColor));
+          }
+          layers.forEach(layer => {
+            const alpha = layer[3] ?? 1;
+            bg = bg.map((v, i) => layer[i] * alpha + v * (1 - alpha));
+          });
+          const foreground = luminance(parse(getComputedStyle(option).color));
+          const background = luminance(bg);
+          const ratio = (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+          return option.getBoundingClientRect().width > 0 && ratio >= 4.5;
+        });
+      })()
+      JS);
+    self::assertTrue($contrast, "$context: all popover labels must have at least 4.5:1 contrast.");
+  }
+
+  /**
    * Tests timed search protection survives AJAX and block presentation.
    */
   public function testHoneypotProtection(): void {

@@ -69,6 +69,8 @@ adapts to the theme's available content width. Result cards and temporal
 controls reflow within narrow columns, retaining usable mobile abstracts
 and collection actions. Sidebar filters and front-page exposed-form block
 columns support both Solo and d8w3css, including compact and mobile layouts.
+Row export/download popovers use paired system surface/text colors to keep
+transparent menu options readable in both themes.
 
 Geographic [filter summaries](docs/search-and-views.md#geographic-filter-summaries)
 support `bbox` and `geospatial_bounds3d`, renamed exposed identifiers, and

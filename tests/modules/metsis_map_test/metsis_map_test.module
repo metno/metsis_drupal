@@ -8,7 +8,11 @@
 declare(strict_types=1);
 
 use Drupal\Core\Url;
+use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Item\Item;
+use Drupal\search_api\Plugin\views\ResultRow;
 use Drupal\views\ViewExecutable;
+use Solarium\QueryType\Select\Result\Document;
 
 /**
  * Implements hook_views_data_alter().
@@ -22,6 +26,22 @@ function metsis_map_test_views_data_alter(array &$data): void {
  * Implements hook_views_pre_render().
  */
 function metsis_map_test_views_pre_render(ViewExecutable $view): void {
+  if ($view->id() === 'metsis_search' && \Drupal::state()->get('metsis_map_test.row_popovers')) {
+    $item = new Item(Index::load('metsis'), 'solr_document/popover-test');
+    $item->setExtraData('search_api_solr_document', new Document([
+      'id' => 'popover-test',
+      'metadata_identifier' => 'popover-test',
+      'title' => 'Popover contrast fixture',
+      'data_access_json' => [
+        ['type' => 'HTTP', 'resource' => 'https://example.test/data.nc'],
+        ['type' => 'OPeNDAP', 'resource' => 'https://example.test/dodsC/data'],
+      ],
+    ]));
+    $view->rowPlugin->options['style'] = 'default';
+    $view->rowPlugin->options['show_operations'] = TRUE;
+    $view->attachment_after[] = $view->rowPlugin->render(new ResultRow(['_item' => $item]));
+  }
+
   if ($view->id() !== 'metsis_search' || !\Drupal::state()->get('metsis_map_test.responsive_rows')) {
     return;
   }
