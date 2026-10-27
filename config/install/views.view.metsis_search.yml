@@ -328,12 +328,15 @@ display:
           exposed: true
           expose:
             operator_id: bbox_op
-            label: 'Geograpjic filter'
+            label: 'Geographic filter'
             description: ''
             use_operator: true
             operator: geospatial_bounds3d_op
-            operator_limit_selection: false
-            operator_list: {  }
+            operator_limit_selection: true
+            operator_list:
+              contains: contains
+              within: within
+              intersects: intersects
             identifier: bbox
             required: false
             remember: false

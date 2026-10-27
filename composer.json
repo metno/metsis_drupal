@@ -78,6 +78,7 @@
         "drupal/config_inspector": "^2.1",
         "drupal/editoria11y": "^3",
         "rector/rector": "^2",
+        "drupal/d8w3css": "^2",
         "drupal/markdown": "^3.1",
         "league/commonmark": "^2.8",
         "brianium/paratest": "^7",

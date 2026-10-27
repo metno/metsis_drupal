@@ -64,6 +64,11 @@ no-results pages beyond the viewport. Temporal fields also stack within narrow f
 containers. The search-box component resets theme form-item/action margins
 so its search and clear buttons remain aligned with the input.
 
+Sidebar filters explicitly stack instead of inheriting a theme's horizontal
+Views exposed-form layout. This includes d8w3css (`drupal8_w3css_theme`) and
+Solo; unrelated Views forms keep their theme layout. The search component
+also clears d8w3css's section margins around the input and overlaid actions.
+
 Choose **Custom** row style and supply a machine name for
 `metsis-search-row-custom--MACHINE-NAME.html.twig`. Replace underscores with
 hyphens in the filename. Missing overrides and legacy Detailed/Custom styles
@@ -98,7 +103,7 @@ predicate omits the dropdown without changing the date inputs. Styling is
 attached by the plugin and uses semantic classes, so renamed filter/operator
 identifiers and exposed-form blocks receive the same layout.
 
-Layout regression coverage includes Solo, Olivero, and Stark at 1440, 390, and
+Layout regression coverage includes Solo, d8w3css, Olivero, and Stark at 1440, 390, and
 320px, with exposed/fixed predicates, custom identifiers, saved date values,
 and Views AJAX refreshes.
 
@@ -120,6 +125,13 @@ secondary Search button. Existing selections are preserved. Weight/column
 controls appear only for selected elements and retain their preferences when
 temporarily hidden. Sort/pager controls are omitted.
 The block submits through its Search buttons, not filter-change autosubmit.
+
+Column styling supports both Solo's exposed-form wrappers and the standard
+`form--inline` wrapper used by d8w3css. Each column stacks its controls without
+wrapping sideways, including when temporal and geographic filters share a
+column. Normal and compact modes retain the configured desktop column count,
+use at most two columns below 75rem, and stack below 48rem. Date inputs fill
+their grid cells rather than inheriting d8w3css's half-width date-item rule.
 
 Hidden exposed predicates submit **Intersects**. A non-exposed predicate keeps
 the View's fixed operator. Hiding is unavailable when the allowed operators

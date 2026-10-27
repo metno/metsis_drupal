@@ -108,6 +108,13 @@ It also assigns stale coordinates to hidden map tooltips to guard against
 resize-induced overflow. These fixtures are confined to the test module and
 enabled by test state; they do not query live Solr.
 
+Filter-layout regressions cover Solo and d8w3css sidebars and front-page
+exposed-form blocks at 1440, 820, 390, and 320px. They measure control bounds,
+date grid-cell widths, search-button alignment, fieldset separation, horizontal
+overflow, and actual one/two/three-column placement in normal and compact modes.
+The sidebar is checked again after Views AJAX. Temporal and bbox mode scenarios
+also include d8w3css alongside Solo, Olivero, and Stark.
+
 The [quality workflow](../../.github/workflows/quality.yml) runs ESLint, Prettier,
 PHPStan, PHPCS, and PHPUnit. The reusable
 [Drupal preparation action](../../.github/actions/drupal-prepare/action.yml)

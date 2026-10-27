@@ -135,8 +135,8 @@ final class MetsisMapsTest extends WebDriverTestBase {
    * Tests temporal predicates above date fields with configurable identifiers.
    */
   public function testTemporalLayouts(): void {
-    $this->container->get('theme_installer')->install(['solo', 'olivero']);
-    foreach (['solo', 'olivero', 'stark'] as $theme) {
+    $this->container->get('theme_installer')->install(['solo', 'olivero', 'drupal8_w3css_theme']);
+    foreach (['solo', 'olivero', 'stark', 'drupal8_w3css_theme'] as $theme) {
       $this->config('system.theme')->set('default', $theme)->save();
       foreach ([FALSE, TRUE] as $predicate) {
         $view = View::load('metsis_search');
@@ -203,8 +203,8 @@ final class MetsisMapsTest extends WebDriverTestBase {
    * Tests every bbox input mode with predicates, themes, and narrow layouts.
    */
   public function testBboxLayouts(): void {
-    $this->container->get('theme_installer')->install(['solo', 'olivero']);
-    foreach (['solo', 'olivero', 'stark'] as $theme) {
+    $this->container->get('theme_installer')->install(['solo', 'olivero', 'drupal8_w3css_theme']);
+    foreach (['solo', 'olivero', 'stark', 'drupal8_w3css_theme'] as $theme) {
       $this->config('system.theme')->set('default', $theme)->save();
       foreach ([
         'map' => [TRUE, FALSE, FALSE],
@@ -248,6 +248,105 @@ final class MetsisMapsTest extends WebDriverTestBase {
         }
       }
     }
+  }
+
+  /**
+   * Tests stacked sidebar filters and front-page block columns in both themes.
+   */
+  public function testThemeFilterLayouts(): void {
+    $this->container->get('theme_installer')->install(['solo', 'drupal8_w3css_theme']);
+    $this->config('system.site')->set('page.front', '/user/login')->save();
+    $filters = View::load('metsis_search')->get('display')['default']['display_options']['filters'];
+    $columns = [];
+    foreach ($filters as $id => $filter) {
+      $columns[$id] = match ($filter['plugin_id']) {
+        'metsis_filter_date_range' => '2',
+        'metsis_filter_bbox' => '3',
+        default => '1',
+      };
+    }
+
+    foreach (['solo', 'drupal8_w3css_theme'] as $theme) {
+      $this->config('system.theme')->set('default', $theme)->save();
+      $this->drupalPlaceBlock('system_main_block');
+      $this->drupalGet('metsis/search');
+      foreach ([1440, 820, 390, 320] as $width) {
+        $this->getSession()->resizeWindow($width, 1000);
+        $this->assertFilterFormLayout('.metsis-filters', "$theme/sidebar/$width");
+      }
+      $this->getSession()->getPage()->find('css', '.metsis-filters input[type="submit"]')->click();
+      $this->assertSession()->assertWaitOnAjaxRequest();
+      $this->assertFilterFormLayout('.metsis-filters', "$theme/sidebar/after AJAX");
+
+      foreach ([FALSE, TRUE] as $compact) {
+        foreach ([1, 2, 3] as $count) {
+          $block = $this->drupalPlaceBlock('metsis_search_exposed_form', [
+            'region' => 'content',
+            'shown_filters' => array_keys($filters),
+            'filter_columns' => $columns,
+            'column_count' => $count,
+            'compact' => $compact,
+          ]);
+          $this->drupalGet('<front>');
+          foreach ([1440, 820, 390, 320] as $width) {
+            $this->getSession()->resizeWindow($width, 1000);
+            $context = "$theme/block/compact=$compact/columns=$count/$width";
+            $this->assertFilterFormLayout('.metsis-search-exposed-form-block', $context);
+            $expected = $width < 768 ? 1 : min($count, $width < 1200 ? 2 : 3);
+            $actual = $this->getSession()->evaluateScript(<<<'JS'
+              (function () {
+                const columns = Array.from(document.querySelectorAll(".metsis-search-filter-grid__column"));
+                const top = columns[0].getBoundingClientRect().top;
+                return columns.filter(e => Math.abs(e.getBoundingClientRect().top - top) < 2).length;
+              })()
+              JS);
+            self::assertSame($expected, $actual, "$context: configured columns must share a row.");
+          }
+          $block->delete();
+        }
+      }
+    }
+  }
+
+  /**
+   * Measures control widths, containment, stacking, and search alignment.
+   */
+  private function assertFilterFormLayout(string $selector, string $context): void {
+    $selector_json = json_encode($selector, JSON_THROW_ON_ERROR);
+    $layout = $this->getSession()->evaluateScript(<<<JS
+      (function () {
+        const scope = document.querySelector($selector_json);
+        const bounds = scope.getBoundingClientRect();
+        const fieldsets = Array.from(scope.querySelectorAll("fieldset"));
+        const controls = Array.from(scope.querySelectorAll("input[type=date], select, .metsis-search-text__input, .bbox-map-filter-container"));
+        const input = scope.querySelector(".metsis-search-text__input").getBoundingClientRect();
+        const button = scope.querySelector(".metsis-search-box__button").getBoundingClientRect();
+        const columns = Array.from(scope.querySelectorAll(".metsis-search-filter-grid__column"));
+        return {
+          outside: controls.concat(fieldsets, columns).filter(e => {
+            const r = e.getBoundingClientRect();
+            return r.width <= 100 || r.left < bounds.left - 1 || r.right > bounds.right + 1;
+          }).map(e => ({classes: e.className, width: e.getBoundingClientRect().width, left: e.getBoundingClientRect().left - bounds.left, right: e.getBoundingClientRect().right - bounds.right})),
+          stacked: fieldsets.every((e, i) => {
+            const previous = fieldsets[i - 1];
+            return columns.length || !previous || e.getBoundingClientRect().top >= previous.getBoundingClientRect().bottom;
+          }),
+          datesFill: Array.from(scope.querySelectorAll(".metsis-date-range-field")).every(e => {
+            const tracks = getComputedStyle(e.parentElement).gridTemplateColumns.split(" ").map(parseFloat);
+            const index = Array.from(e.parentElement.children).indexOf(e) % tracks.length;
+            return Math.abs(e.getBoundingClientRect().width - tracks[index]) < 2
+              && Math.abs(e.getBoundingClientRect().width - e.querySelector("input").getBoundingClientRect().width) < 2;
+          }),
+          aligned: button.top >= input.top && button.bottom <= input.bottom,
+          overflow: scope.scrollWidth > scope.clientWidth + 1
+        };
+      })()
+      JS);
+    self::assertSame([], $layout['outside'], "$context: filters and controls must have usable widths within the form.");
+    self::assertTrue($layout['stacked'], "$context: sidebar fieldsets must not overlap.");
+    self::assertTrue($layout['datesFill'], "$context: dates must fill their grid cells.");
+    self::assertTrue($layout['aligned'], "$context: search button must stay aligned inside its input.");
+    self::assertFalse($layout['overflow'], "$context: filters must not overflow horizontally.");
   }
 
   /**

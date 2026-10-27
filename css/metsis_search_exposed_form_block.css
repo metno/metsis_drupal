@@ -6,23 +6,34 @@
   width: 100%;
 }
 
-#page-wrapper
+form.views-exposed-form.metsis-search-exposed-form-block > .form--inline {
+  display: block;
+}
+
+form.views-exposed-form.metsis-search-exposed-form-block
+  > .form--inline
+  > .metsis-search-filter-grid {
+  margin-inline: 0;
+}
+
+/* Retain Solo's required specificity without requiring its page/form wrappers. */
+:is(#page-wrapper, body)
   form.metsis-search-exposed-form-block--compact
-  .exposed-form
+  :is(.exposed-form, .form--inline)
   .metsis-search-filter-grid
   .metsis-date-range-fields::before,
-#page-wrapper
+:is(#page-wrapper, body)
   form.metsis-search-exposed-form-block--compact
-  .exposed-form
+  :is(.exposed-form, .form--inline)
   .metsis-search-filter-grid
   .metsis-date-range-fields::after {
   content: none;
   display: none;
 }
 
-#page-wrapper
+:is(#page-wrapper, body)
   form.views-exposed-form.metsis-search-exposed-form-block
-  .exposed-form
+  :is(.exposed-form, .form--inline)
   .metsis-search-filter-grid {
   display: flex;
   flex-direction: column;
@@ -32,21 +43,21 @@
   width: 100%;
 }
 
-#page-wrapper
+:is(#page-wrapper, body)
   form.views-exposed-form.metsis-search-exposed-form-block
-  .exposed-form
+  :is(.exposed-form, .form--inline)
   .metsis-search-filter-grid::before,
-#page-wrapper
+:is(#page-wrapper, body)
   form.views-exposed-form.metsis-search-exposed-form-block
-  .exposed-form
+  :is(.exposed-form, .form--inline)
   .metsis-search-filter-grid::after,
-#page-wrapper
+:is(#page-wrapper, body)
   form.views-exposed-form.metsis-search-exposed-form-block
-  .exposed-form
+  :is(.exposed-form, .form--inline)
   .metsis-search-filter-grid__column::before,
-#page-wrapper
+:is(#page-wrapper, body)
   form.views-exposed-form.metsis-search-exposed-form-block
-  .exposed-form
+  :is(.exposed-form, .form--inline)
   .metsis-search-filter-grid__column::after {
   content: none;
   display: none;
@@ -61,13 +72,22 @@
   width: 100%;
 }
 
-#page-wrapper
+:is(#page-wrapper, body)
   form.views-exposed-form.metsis-search-exposed-form-block
-  .exposed-form
+  :is(.exposed-form, .form--inline)
   .metsis-search-filter-grid__column {
+  flex-direction: column;
+  flex-wrap: nowrap;
   align-items: stretch;
   max-width: none;
   width: 100%;
+}
+
+:is(#page-wrapper, body)
+  form.views-exposed-form.metsis-search-exposed-form-block
+  .metsis-search-filter-grid__column
+  > .metsis-search-filter-grid__item {
+  flex: initial;
 }
 
 .metsis-search-filter-grid__item {
@@ -78,18 +98,18 @@
   align-self: stretch;
 }
 
-#page-wrapper
+:is(#page-wrapper, body)
   form.views-exposed-form.metsis-search-exposed-form-block--compact
-  .exposed-form
+  :is(.exposed-form, .form--inline)
   .metsis-search-filter-grid,
-#page-wrapper
+:is(#page-wrapper, body)
   form.views-exposed-form.metsis-search-exposed-form-block--compact
-  .exposed-form
+  :is(.exposed-form, .form--inline)
   .metsis-search-filter-grid__column {
   gap: 0.5rem;
 }
 
-#page-wrapper
+:is(#page-wrapper, body)
   form.metsis-search-exposed-form-block--compact
   .metsis-search-filter-grid
   fieldset {
@@ -97,22 +117,22 @@
   margin-block: 0;
 }
 
-#page-wrapper
+:is(#page-wrapper, body)
   form.metsis-search-exposed-form-block--compact
   .metsis-search-filter-grid
   .form-item {
   margin-block: 0.35rem;
 }
 
-#page-wrapper
+:is(#page-wrapper, body)
   form.metsis-search-exposed-form-block--compact
   .metsis-search-fieldset__body {
   padding: 0.25rem;
 }
 
-#page-wrapper
+:is(#page-wrapper, body)
   form.metsis-search-exposed-form-block--compact
-  .exposed-form
+  :is(.exposed-form, .form--inline)
   .metsis-search-filter-grid
   .metsis-date-range-fields {
   display: grid;
@@ -121,9 +141,9 @@
   width: 100%;
 }
 
-#page-wrapper
+:is(#page-wrapper, body)
   form.metsis-search-exposed-form-block--compact
-  .exposed-form
+  :is(.exposed-form, .form--inline)
   .metsis-date-range-fields
   .form-item {
   box-sizing: border-box;
@@ -133,9 +153,9 @@
   padding: 0;
 }
 
-#page-wrapper
+:is(#page-wrapper, body)
   form.metsis-search-exposed-form-block--compact
-  .exposed-form
+  :is(.exposed-form, .form--inline)
   .metsis-date-range-fields
   input[type="date"] {
   box-sizing: border-box;
@@ -143,7 +163,7 @@
   width: 100%;
 }
 
-#page-wrapper
+:is(#page-wrapper, body)
   form.metsis-search-exposed-form-block--compact
   [data-component-id="metsis_drupal:bbox_form_tabs"]
   .tabs {
@@ -151,23 +171,23 @@
   gap: 0.25rem;
 }
 
-#page-wrapper
+:is(#page-wrapper, body)
   form.metsis-search-exposed-form-block--compact
   [data-component-id="metsis_drupal:bbox_form_tabs"]
   .tab-panels {
   padding: 0.5rem;
 }
 
-#page-wrapper
+:is(#page-wrapper, body)
   form.metsis-search-exposed-form-block--compact
   [data-component-id="metsis_drupal:bbox_form_tabs"]
   .tab-button {
   padding: 0.65rem 0.75rem;
 }
 
-#page-wrapper
+:is(#page-wrapper, body)
   form.views-exposed-form.metsis-search-exposed-form-block
-  .exposed-form
+  :is(.exposed-form, .form--inline)
   .metsis-search-exposed-form-block__actions {
   clear: both;
   display: block;
@@ -175,26 +195,26 @@
 }
 
 @media (min-width: 48rem) {
-  #page-wrapper
+  :is(#page-wrapper, body)
     form.views-exposed-form.metsis-search-exposed-form-block
-    .exposed-form
+    :is(.exposed-form, .form--inline)
     .metsis-search-filter-grid[data-metsis-column-count="2"],
-  #page-wrapper
+  :is(#page-wrapper, body)
     form.views-exposed-form.metsis-search-exposed-form-block
-    .exposed-form
+    :is(.exposed-form, .form--inline)
     .metsis-search-filter-grid[data-metsis-column-count="3"] {
     flex-direction: row;
     flex-wrap: wrap;
   }
 
-  #page-wrapper
+  :is(#page-wrapper, body)
     form.views-exposed-form.metsis-search-exposed-form-block
-    .exposed-form
+    :is(.exposed-form, .form--inline)
     .metsis-search-filter-grid[data-metsis-column-count="2"]
     > .metsis-search-filter-grid__column,
-  #page-wrapper
+  :is(#page-wrapper, body)
     form.views-exposed-form.metsis-search-exposed-form-block
-    .exposed-form
+    :is(.exposed-form, .form--inline)
     .metsis-search-filter-grid[data-metsis-column-count="3"]
     > .metsis-search-filter-grid__column {
     flex: 0 0 calc(50% - 0.5rem);
@@ -203,9 +223,9 @@
 }
 
 @media (min-width: 75rem) {
-  #page-wrapper
+  :is(#page-wrapper, body)
     form.views-exposed-form.metsis-search-exposed-form-block
-    .exposed-form
+    :is(.exposed-form, .form--inline)
     .metsis-search-filter-grid[data-metsis-column-count="3"]
     > .metsis-search-filter-grid__column {
     flex-basis: calc(33.333% - 0.667rem);

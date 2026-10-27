@@ -327,6 +327,21 @@
   overflow-wrap: anywhere;
 }
 
+/* Exposed filters stack here even when the theme lays out Views forms inline. */
+.metsis-search-layout .metsis-filters form.views-exposed-form > .form--inline {
+  display: block;
+}
+
+.metsis-search-layout
+  .metsis-filters
+  form.views-exposed-form
+  > .form--inline
+  > :not(input[type="hidden"]) {
+  float: none;
+  width: 100%;
+  margin-inline: 0;
+}
+
 .metsis-search-layout .metsis-filters :is(input, select, .form-item) {
   box-sizing: border-box;
   min-width: 0;
